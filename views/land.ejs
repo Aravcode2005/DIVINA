@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%=pageTitle%></title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <body>
+    <div class="btn class">
+    <form  method ="POST" id="userform" name="form" >
+    <button type="submit" id="userbutton" class="userbutton">New User</button>
+    </form>
+    </div>
+    <div id="admin">
+      <form method="POST" id="adminform" name="adminform">
+     <button type="button" id="redirectButton" class="redirectButton" onclick='window.location.href="/admin"'>Are you the Superadmin?Click here </button>
+     </form>
+   </div>
+   </body>
+</html>

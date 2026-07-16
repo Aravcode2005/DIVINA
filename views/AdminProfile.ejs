@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Create your profile — hireflow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FAFAF7;
+    --card:#FFFFFF;
+    --border:#ECEAE3;
+    --text:#14141A;
+    --text-soft:#6B6B72;
+    --accent:#3F3FF0;
+    --accent-hover:#3232D6;
+    --accent-soft:#EEEEFD;
+    --error:#D64545;
+    --error-soft:#FCEAEA;
+    --radius-lg:20px;
+    --radius-md:12px;
+    --radius-full:999px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .page{
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+  }
+
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:28px 48px;
+  }
+  .logo{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-family:'Sora',sans-serif;
+    font-weight:700;
+    font-size:18px;
+  }
+  .logo-dot{
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    background:var(--accent);
+    display:inline-block;
+  }
+  .progress{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    letter-spacing:0.06em;
+    color:var(--text-soft);
+  }
+  .progress b{ color:var(--accent); }
+
+  /* ---------- Hero ---------- */
+  main{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:24px 24px 80px;
+  }
+  .eyebrow{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    letter-spacing:0.08em;
+    color:var(--accent);
+    text-transform:uppercase;
+    margin-bottom:18px;
+  }
+  h1{
+    font-family:'Sora',sans-serif;
+    font-weight:800;
+    font-size:42px;
+    line-height:1.12;
+    text-align:center;
+    margin:0 0 16px;
+    max-width:620px;
+  }
+  .subtext{
+    text-align:center;
+    color:var(--text-soft);
+    font-size:15.5px;
+    line-height:1.6;
+    max-width:480px;
+    margin:0 0 36px;
+  }
+
+  /* ---------- Card ---------- */
+  .card{
+    width:100%;
+    max-width:460px;
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:var(--radius-lg);
+    padding:36px;
+    box-shadow:0 1px 2px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04);
+  }
+
+  .alert{
+    display:flex;
+    align-items:flex-start;
+    gap:8px;
+    background:var(--error-soft);
+    color:var(--error);
+    border:1px solid #F3CCCC;
+    border-radius:var(--radius-md);
+    padding:12px 14px;
+    font-size:13.5px;
+    margin-bottom:20px;
+  }
+
+  /* details strip pulled from the earlier signup steps */
+  .details{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    background:#FAFAF8;
+    border:1px solid var(--border);
+    border-radius:var(--radius-md);
+    padding:14px 16px;
+    margin-bottom:28px;
+  }
+  .details-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .details-label{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    color:var(--text-soft);
+  }
+  .details-value{
+    font-size:13.5px;
+    font-weight:500;
+  }
+
+  /* avatar upload */
+  .upload-section{ margin-bottom:24px; }
+  .field-label{
+    display:block;
+    font-size:13px;
+    font-weight:600;
+    margin-bottom:8px;
+  }
+  .upload-zone{
+    display:flex;
+    align-items:center;
+    gap:16px;
+    border:1.5px dashed var(--border);
+    border-radius:var(--radius-md);
+    padding:14px;
+    cursor:pointer;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .upload-zone:hover, .upload-zone.dragover{
+    border-color:var(--accent);
+    background:var(--accent-soft);
+  }
+  .avatar-preview{
+    width:56px;
+    height:56px;
+    border-radius:50%;
+    background:#F1F0EC;
+    border:1px solid var(--border);
+    flex:none;
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--text-soft);
+    font-size:11px;
+  }
+  .avatar-preview img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+  }
+  .upload-copy strong{
+    display:block;
+    font-size:13.5px;
+    font-weight:600;
+  }
+  .upload-copy span{
+    display:block;
+    font-size:12px;
+    color:var(--text-soft);
+    margin-top:2px;
+  }
+  input[type="file"]{ display:none; }
+
+  /* password fields */
+  .field{ margin-bottom:18px; }
+  input[type="password"]{
+    width:100%;
+    font-family:'Inter',sans-serif;
+    font-size:14px;
+    padding:12px 14px;
+    border:1px solid var(--border);
+    border-radius:var(--radius-md);
+    background:#FCFCFA;
+    color:var(--text);
+    outline:none;
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  input[type="password"]:focus{
+    border-color:var(--accent);
+    box-shadow:0 0 0 3px var(--accent-soft);
+  }
+  .field-hint{
+    font-size:12px;
+    color:var(--text-soft);
+    margin-top:6px;
+  }
+  .field-error{
+    display:none;
+    font-size:12px;
+    color:var(--error);
+    margin-top:6px;
+  }
+
+  .btn-primary{
+    width:100%;
+    background:var(--accent);
+    color:#fff;
+    border:none;
+    border-radius:var(--radius-full);
+    padding:13px 0;
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:14.5px;
+    cursor:pointer;
+    transition:background .15s ease, transform .05s ease;
+    margin-top:6px;
+  }
+  .btn-primary:hover{ background:var(--accent-hover); }
+  .btn-primary:active{ transform:translateY(1px); }
+  .btn-primary:disabled{ background:#C9C9F5; cursor:not-allowed; }
+
+  .footnote{
+    text-align:center;
+    font-size:12px;
+    color:var(--text-soft);
+    margin-top:18px;
+  }
+
+  @media (max-width:520px){
+    .topbar{ padding:20px; }
+    h1{ font-size:32px; }
+    .card{ padding:24px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="topbar">
+    <div class="logo"><span class="logo-dot"></span>hireflow</div>
+    <div class="progress">STEP <b>03</b> / 03</div>
+  </div>
+
+  <main>
+    <div class="eyebrow">last step — secure your account</div>
+    <h1>Add a photo.<br>Set a password.<br>You're in.</h1>
+    <p class="subtext">
+      We've kept the details from your last step. Add a profile photo and choose
+      a password to finish setting up your admin account.
+    </p>
+
+    <div class="card">
+
+      <% if (typeof message !== 'undefined' && message) { %>
+        <div class="alert">⚠️ <%= message %></div>
+      <% } %>
+
+      <div class="details">
+        <div class="details-row">
+          <span class="details-label">Username</span>
+          <span class="details-value"><%= typeof username !== 'undefined' ? username : '—' %></span>
+        </div>
+        <div class="details-row">
+          <span class="details-label">Email</span>
+          <span class="details-value"><%= typeof email !== 'undefined' ? email : '—' %></span>
+        </div>
+        <div class="details-row">
+          <span class="details-label">Phone</span>
+          <span class="details-value"><%= typeof phone !== 'undefined' ? phone : '—' %></span>
+        </div>
+      </div>
+
+      <form id="profileForm" action="/admin/profileCreation" method="POST" enctype="multipart/form-data" novalidate>
+
+        <div class="upload-section">
+          <label class="field-label">Profile photo</label>
+          <div class="upload-zone" id="uploadZone">
+            <div class="avatar-preview" id="avatarPreview">Photo</div>
+            <div class="upload-copy">
+              <strong id="uploadFileName">Click or drag a photo here</strong>
+              <span>PNG or JPG, square works best</span>
+            </div>
+          </div>
+          <input type="file" name="image" id="photoInput" accept="image/png, image/jpeg" required>
+          <div class="field-error" id="photoError">A photo is required to create your profile.</div>
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="password">Password</label>
+          <input type="password" name="password" id="password" minlength="6" required>
+          <div class="field-hint">At least 6 characters.</div>
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="confirmPassword">Confirm password</label>
+          <input type="password" id="confirmPassword" minlength="6" required>
+          <div class="field-error" id="confirmError">Passwords don't match.</div>
+        </div>
+
+        <button type="submit" class="btn-primary" id="submitBtn">Create profile</button>
+      </form>
+    </div>
+
+    <p class="footnote">Your photo and password are stored securely and only visible to you.</p>
+  </main>
+</div>
+<script>
+  const uploadZone = document.getElementById('uploadZone');
+  const photoInput = document.getElementById('photoInput');
+  const avatarPreview = document.getElementById('avatarPreview');
+  const uploadFileName = document.getElementById('uploadFileName');
+  const photoError = document.getElementById('photoError');
+  const password = document.getElementById('password');
+  const confirmPassword = document.getElementById('confirmPassword');
+  const confirmError = document.getElementById('confirmError');
+  const form = document.getElementById('profileForm');
+  const submitBtn = document.getElementById('submitBtn');
+
+  uploadZone.addEventListener('click', () => photoInput.click());
+
+  ['dragover', 'dragenter'].forEach(evt =>
+    uploadZone.addEventListener(evt, e => {
+      e.preventDefault();
+      uploadZone.classList.add('dragover');
+    })
+  );
+
+  ['dragleave', 'drop'].forEach(evt =>
+    uploadZone.addEventListener(evt, e => {
+      e.preventDefault();
+      uploadZone.classList.remove('dragover');
+    })
+  );
+
+  uploadZone.addEventListener('drop', e => {
+    if (e.dataTransfer.files.length) {
+      photoInput.files = e.dataTransfer.files;
+      renderPreview(e.dataTransfer.files[0]);
+    }
+  });
+
+  photoInput.addEventListener('change', () => {
+    if (photoInput.files.length) {
+      renderPreview(photoInput.files[0]);
+    }
+  });
+
+  function renderPreview(file) {
+    photoError.style.display = 'none';
+    uploadFileName.textContent = file.name;
+
+    const reader = new FileReader();
+
+    reader.onload = e => {
+      avatarPreview.innerHTML =
+        `<img src="${e.target.result}" alt="Preview">`;
+    };
+
+    reader.readAsDataURL(file);
+  }
+
+  function passwordsMatch() {
+
+    if (!confirmPassword.value) {
+      confirmError.style.display = 'none';
+      return false;
+    }
+
+    const match =
+      password.value === confirmPassword.value;
+
+    confirmError.style.display =
+      match ? 'none' : 'block';
+
+    return match;
+  }
+
+  password.addEventListener('input', passwordsMatch);
+  confirmPassword.addEventListener('input', passwordsMatch);
+
+  form.addEventListener('submit', (e) => {
+
+    let valid = true;
+
+    if (!photoInput.files.length) {
+      photoError.style.display = 'block';
+      valid = false;
+    }
+
+    if (!passwordsMatch()) {
+      valid = false;
+    }
+
+    if (!valid) {
+      e.preventDefault();
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Creating profile...';
+  });
+</script>
+</body>
+</html>

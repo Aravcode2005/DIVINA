@@ -1,0 +1,107 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= pageTitle %></title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'ui-sans-serif', 'system-ui'],
+            display: ['Space Grotesk', 'ui-sans-serif', 'system-ui'],
+            mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50:  '#eef1ff',
+              100: '#dee4fe',
+              500: '#3b5bfb',
+              600: '#3049e0',
+              700: '#2538b8',
+            },
+          },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    body { font-family: 'Inter', sans-serif; background:#fafaf9; }
+    @media (prefers-reduced-motion: no-preference) {
+      .fade-up { animation: fadeUp .6s ease both; }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: none; }
+    }
+    a:focus-visible, button:focus-visible {
+      outline: 2px solid #3b5bfb;
+      outline-offset: 2px;
+    }
+  </style>
+</head>
+<body class="text-[#0a0a0a] antialiased">
+
+  <header class="border-b border-gray-100">
+    <div class="max-w-6xl mx-auto px-6 py-5 flex items-center justify-between">
+      <a href="/Homepage" class="flex items-center gap-2 font-display font-semibold text-[15px]">
+        <span class="w-2 h-2 rounded-full bg-brand-500 inline-block"></span>
+        hireflow
+      </a>
+    </div>
+  </header>
+
+  <main class="max-w-md mx-auto px-6 py-20 sm:py-28">
+    <div class="fade-up text-center mb-10">
+      <p class="font-mono text-xs font-medium uppercase tracking-[0.2em] text-brand-600 mb-4">Staff access</p>
+      <h1 class="font-display font-bold text-4xl leading-[1.1] tracking-tight mb-4">
+        Welcome to Hireflow.
+      </h1>
+      <p class="text-gray-500 text-[15px] leading-relaxed">
+        Sign in to your workspace, or create a new admin account to get started.
+      </p>
+    </div>
+
+    <div class="fade-up bg-white border border-gray-200 rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,0.04),0_12px_32px_-12px_rgba(0,0,0,0.08)] divide-y divide-gray-100 overflow-hidden" style="animation-delay:.1s">
+
+      <a href="/admin/signin" id="adminSignin"
+        class="group flex items-center gap-4 px-6 py-5 hover:bg-brand-50/40 transition">
+        <span class="w-10 h-10 rounded-full bg-brand-50 text-brand-600 flex items-center justify-center shrink-0">
+          <i class="fa-solid fa-right-to-bracket text-[15px]"></i>
+        </span>
+        <span class="flex-1">
+          <span class="block text-sm font-semibold">Sign in to your workspace</span>
+          <span class="block text-xs text-gray-500 mt-0.5">Already set up? Pick up where you left off.</span>
+        </span>
+        <i class="fa-solid fa-arrow-right text-gray-300 group-hover:text-brand-600 group-hover:translate-x-0.5 transition text-sm"></i>
+      </a>
+
+      <a href="/admin/signup" id="adminSignup"
+        class="group flex items-center gap-4 px-6 py-5 hover:bg-brand-50/40 transition">
+        <span class="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+          <i class="fa-solid fa-user-plus text-[15px]"></i>
+        </span>
+        <span class="flex-1">
+          <span class="block text-sm font-semibold">Create an admin account</span>
+          <span class="block text-xs text-gray-500 mt-0.5">Set up a new hiring workspace for your company.</span>
+        </span>
+        <i class="fa-solid fa-arrow-right text-gray-300 group-hover:text-brand-600 group-hover:translate-x-0.5 transition text-sm"></i>
+      </a>
+
+    </div>
+
+    <p class="fade-up text-center text-xs text-gray-400 mt-8" style="animation-delay:.15s">
+      Not staff? <a href="/Homepage" class="font-semibold text-gray-500 hover:text-brand-600 transition">Back to the homepage</a>
+    </p>
+  </main>
+
+</body>
+</html>

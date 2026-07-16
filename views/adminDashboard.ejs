@@ -1,0 +1,1345 @@
+
+<%
+  var adminName = typeof Admin !== 'undefined' && Admin ? Admin : 'Admin';
+  var adminEmail = typeof Email !== 'undefined' && Email ? Email : '';
+  var adminPhone = typeof PhoneNumber !== 'undefined' && PhoneNumber ? PhoneNumber : '';
+  var adminPhoto = typeof Photo !== 'undefined' && Photo ? Photo : null;
+  var adminId = typeof Id !== 'undefined' && Id ? Id : '';
+  var connected = typeof linkedin !== 'undefined' && linkedin && linkedin.connected;
+  var draft = typeof post !== 'undefined' && post ? post : {};
+  var errs = typeof errors !== 'undefined' && errors ? errors : {};
+  var log = typeof activity !== 'undefined' && Array.isArray(activity) ? activity : [];
+  var dashStats = typeof stats !== 'undefined' && stats ? stats : {};
+  var recEngine = typeof recruiteros !== 'undefined' && recruiteros ? recruiteros : {};
+  var recentCandidates = typeof candidates !== 'undefined' && Array.isArray(candidates) ? candidates : [];
+  var firstName = String(adminName).split(' ')[0] || 'Admin';
+  var initials = String(adminName).split(/\s+/).filter(Boolean).slice(0, 2).map(function(part) { return part[0].toUpperCase(); }).join('') || 'A';
+  var dashboardPath = '/admin/' + encodeURIComponent(adminName);
+
+  function stageClass(stage) {
+    return String(stage || 'unknown').toLowerCase();
+  }
+
+  function stageLabel(stage) {
+    return String(stage || 'Received').replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, function(char) {
+      return char.toUpperCase();
+    });
+  }
+
+  var timezones = [
+    ['Asia/Kolkata', 'India Standard Time'],
+    ['America/New_York', 'Eastern Time'],
+    ['America/Chicago', 'Central Time'],
+    ['America/Denver', 'Mountain Time'],
+    ['America/Los_Angeles', 'Pacific Time'],
+    ['Europe/London', 'London'],
+    ['Europe/Berlin', 'Central Europe'],
+    ['Asia/Dubai', 'Dubai'],
+    ['Asia/Singapore', 'Singapore'],
+    ['Australia/Sydney', 'Sydney']
+  ];
+%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= typeof pageTitle !== 'undefined' ? pageTitle : 'Dashboard' %> - hireflow</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
+    :root {
+      --bg: #f6f7fb;
+      --panel: #ffffff;
+      --panel-soft: #f9fafc;
+      --ink: #111827;
+      --muted: #687083;
+      --faint: #98a1b3;
+      --line: #e6e9f0;
+      --line-strong: #d6dbe6;
+      --nav: #101828;
+      --nav-soft: #182033;
+      --blue: #2563eb;
+      --blue-soft: #edf4ff;
+      --green: #059669;
+      --green-soft: #e8f8f1;
+      --amber: #b7791f;
+      --amber-soft: #fff7df;
+      --red: #dc2626;
+      --red-soft: #fff0f0;
+      --violet: #7c3aed;
+      --pink: #db2777;
+      --radius: 8px;
+      --shadow: 0 16px 40px rgba(16, 24, 40, .08);
+      --sidebar: 264px;
+    }
+
+    html { min-height: 100%; }
+    body {
+      min-height: 100%;
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    button, input, textarea, select { font: inherit; }
+    button { cursor: pointer; }
+    svg { display: block; }
+
+    .shell { display: flex; min-height: 100vh; }
+
+    .sidebar {
+      position: fixed;
+      inset: 0 auto 0 0;
+      width: var(--sidebar);
+      padding: 24px 18px;
+      background: var(--nav);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+      overflow-y: auto;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 6px;
+      font-weight: 800;
+      letter-spacing: -.02em;
+    }
+
+    .brand-mark {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, #0ea5e9, #2563eb);
+      box-shadow: 0 10px 22px rgba(37, 99, 235, .28);
+    }
+
+    .profile {
+      padding: 16px;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: var(--radius);
+      background: var(--nav-soft);
+    }
+
+    .profile-head {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .avatar {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      background: #2563eb;
+      color: #fff;
+      font-weight: 800;
+      border: 2px solid rgba(255,255,255,.16);
+      flex: 0 0 auto;
+    }
+
+    .avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .profile-name {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.25;
+    }
+
+    .profile-role {
+      display: inline-flex;
+      margin-top: 4px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: rgba(37, 99, 235, .18);
+      color: #bfdbfe;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .profile-meta {
+      display: grid;
+      gap: 8px;
+      color: rgba(255,255,255,.58);
+      font-size: 12px;
+    }
+
+    .meta-line {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .nav {
+      display: grid;
+      gap: 5px;
+    }
+
+    .nav-label {
+      margin: 8px 8px 4px;
+      color: rgba(255,255,255,.34);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 40px;
+      padding: 9px 10px;
+      border-radius: var(--radius);
+      color: rgba(255,255,255,.64);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .nav-item:hover,
+    .nav-item.active {
+      background: rgba(255,255,255,.08);
+      color: #fff;
+    }
+
+    .nav-item.active { box-shadow: inset 3px 0 0 #60a5fa; }
+    .sidebar-foot { margin-top: auto; display: grid; gap: 8px; }
+
+    .main {
+      width: calc(100% - var(--sidebar));
+      margin-left: var(--sidebar);
+      min-height: 100vh;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      height: 68px;
+      padding: 0 32px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255,255,255,.88);
+      backdrop-filter: blur(16px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+    }
+
+    .crumb {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .crumb span { color: var(--ink); }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .clock {
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 12px;
+    }
+
+    .content {
+      width: min(1440px, 100%);
+      padding: 30px 32px 48px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 24px;
+      align-items: end;
+      margin-bottom: 24px;
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: var(--blue);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(28px, 4vw, 42px);
+      line-height: 1.05;
+      letter-spacing: -.04em;
+    }
+
+    .hero-copy {
+      margin: 10px 0 0;
+      max-width: 760px;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.65;
+    }
+
+    .status-stack {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 28px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .pill-dot { width: 7px; height: 7px; border-radius: 50%; }
+    .pill.on { background: var(--green-soft); color: var(--green); }
+    .pill.on .pill-dot { background: var(--green); }
+    .pill.off { background: var(--red-soft); color: var(--red); }
+    .pill.off .pill-dot { background: var(--red); }
+    .pill.warn { background: var(--amber-soft); color: var(--amber); }
+    .pill.warn .pill-dot { background: var(--amber); }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .metric {
+      position: relative;
+      min-height: 136px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: 0 1px 2px rgba(16, 24, 40, .04);
+      overflow: hidden;
+    }
+
+    .metric::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto;
+      height: 4px;
+      background: var(--accent, var(--blue));
+    }
+
+    .metric-label {
+      margin: 8px 0 18px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .metric-value {
+      font-size: 34px;
+      line-height: 1;
+      font-weight: 800;
+      letter-spacing: -.04em;
+    }
+
+    .metric-note {
+      margin-top: 10px;
+      color: var(--faint);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .pipeline {
+      margin-bottom: 18px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+      box-shadow: var(--shadow);
+    }
+
+    .section-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      margin: 0;
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: -.02em;
+    }
+
+    .section-sub {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .pipeline-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .pipe-step {
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel-soft);
+    }
+
+    .pipe-kicker {
+      color: var(--muted);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .pipe-number {
+      margin: 12px 0 5px;
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -.03em;
+    }
+
+    .pipe-label {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.45fr) minmax(360px, .9fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .stack { display: grid; gap: 18px; }
+
+    .card {
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: 0 1px 2px rgba(16, 24, 40, .04);
+    }
+
+    .card.feature { box-shadow: var(--shadow); }
+
+    .form-grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .field { display: grid; gap: 7px; }
+
+    .field-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    label {
+      color: #344054;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .optional {
+      color: var(--faint);
+      font-weight: 500;
+    }
+
+    textarea,
+    input[type="date"],
+    input[type="time"],
+    select {
+      width: 100%;
+      min-height: 42px;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius);
+      background: #fff;
+      color: var(--ink);
+      outline: none;
+      padding: 10px 12px;
+      transition: border-color .16s, box-shadow .16s;
+    }
+
+    textarea {
+      min-height: 176px;
+      resize: vertical;
+      line-height: 1.55;
+    }
+
+    textarea:focus,
+    input:focus,
+    select:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, .12);
+    }
+
+    .input-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--faint);
+      font-size: 12px;
+    }
+
+    .counter {
+      font-family: "JetBrains Mono", monospace;
+      font-weight: 600;
+    }
+
+    .counter.warn { color: var(--amber); }
+    .counter.danger { color: var(--red); }
+    .error { display: none; color: var(--red); font-size: 12px; font-weight: 600; }
+    .error.visible { display: block; }
+
+    .upload {
+      display: grid;
+      grid-template-columns: 64px minmax(0, 1fr);
+      gap: 14px;
+      align-items: center;
+      min-height: 86px;
+      padding: 12px;
+      border: 1px dashed var(--line-strong);
+      border-radius: var(--radius);
+      background: var(--panel-soft);
+      cursor: pointer;
+      transition: border-color .16s, background .16s;
+    }
+
+    .upload:hover,
+    .upload.dragover {
+      border-color: var(--blue);
+      background: var(--blue-soft);
+    }
+
+    .upload-thumb {
+      width: 64px;
+      height: 64px;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+      color: var(--faint);
+    }
+
+    .upload-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .upload-title {
+      display: block;
+      overflow: hidden;
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 800;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .upload-copy {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .upload input { display: none; }
+
+    .schedule-preview {
+      display: none;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 2px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 28px;
+      padding: 5px 9px;
+      border-radius: 999px;
+      background: var(--blue-soft);
+      color: var(--blue);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 44px;
+      padding: 10px 15px;
+      border: 1px solid transparent;
+      border-radius: var(--radius);
+      font-weight: 800;
+      transition: transform .16s, background .16s, border-color .16s;
+    }
+
+    .btn:hover { transform: translateY(-1px); }
+    .btn:disabled { cursor: wait; opacity: .72; transform: none; }
+    .btn-primary { width: 100%; background: var(--blue); color: #fff; }
+    .btn-primary:hover { background: #1d4ed8; }
+    .btn-light { background: #fff; border-color: var(--line-strong); color: var(--ink); }
+    .btn-light:hover { border-color: var(--blue); color: var(--blue); }
+
+    .integration-card {
+      display: grid;
+      gap: 14px;
+    }
+
+    .linkedin-page {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel-soft);
+      color: #0a66c2;
+      font-weight: 800;
+    }
+
+    .engine-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .engine-item {
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel-soft);
+    }
+
+    .engine-label {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    .engine-value {
+      margin-top: 6px;
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .candidate-list,
+    .log-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .candidate-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+      padding: 11px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .candidate-row:last-child,
+    .log-item:last-child { border-bottom: 0; }
+
+    .candidate-name {
+      overflow: hidden;
+      font-size: 14px;
+      font-weight: 800;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .candidate-meta {
+      overflow: hidden;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 12px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .stage-pill {
+      padding: 5px 8px;
+      border-radius: 999px;
+      background: #eef2f7;
+      color: #475467;
+      font-size: 11px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .stage-pill.booking_sent { background: var(--green-soft); color: var(--green); }
+    .stage-pill.screening_sent { background: var(--blue-soft); color: var(--blue); }
+    .stage-pill.needs_review { background: var(--amber-soft); color: var(--amber); }
+    .stage-pill.rejected { background: var(--red-soft); color: var(--red); }
+
+    .log-live {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--green);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .log-live-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 0 4px rgba(5, 150, 105, .12);
+    }
+
+    .log-item {
+      display: grid;
+      grid-template-columns: 54px minmax(0, 1fr);
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--line);
+      font-size: 13px;
+    }
+
+    .log-time {
+      color: var(--faint);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 11px;
+    }
+
+    .log-body {
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .log-body b { color: var(--ink); }
+    .log-detail { color: var(--faint); }
+
+    .empty {
+      padding: 18px;
+      border: 1px dashed var(--line-strong);
+      border-radius: var(--radius);
+      background: var(--panel-soft);
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .mobile-brand { display: none; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 1180px) {
+      .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .pipeline-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 860px) {
+      :root { --sidebar: 0px; }
+      .shell { display: block; }
+      .sidebar { display: none; }
+      .main { width: 100%; margin-left: 0; }
+      .mobile-brand {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        font-weight: 800;
+      }
+      .topbar { padding: 0 18px; }
+      .crumb { display: none; }
+      .content { padding: 24px 18px 36px; }
+      .hero { grid-template-columns: 1fr; align-items: start; }
+      .status-stack { justify-content: flex-start; }
+      .pipeline-grid { grid-template-columns: 1fr; }
+      .field-row { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 560px) {
+      .metrics { grid-template-columns: 1fr; }
+      .engine-grid { grid-template-columns: 1fr; }
+      .top-actions { gap: 6px; }
+      .clock { display: none; }
+      .section-head { display: grid; }
+      .candidate-row { grid-template-columns: 1fr; align-items: start; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar" aria-label="Admin navigation">
+      <a class="brand" href="/Homepage">
+        <span class="brand-mark" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 12h16"/><path d="M4 6h10"/><path d="M4 18h7"/>
+          </svg>
+        </span>
+        hireflow
+      </a>
+
+      <section class="profile" aria-label="Admin profile">
+        <div class="profile-head">
+          <span class="avatar">
+            <% if (adminPhoto) { %>
+              <img src="<%= adminPhoto %>" alt="<%= adminName %>">
+            <% } else { %>
+              <%= initials %>
+            <% } %>
+          </span>
+          <div>
+            <p class="profile-name"><%= adminName %></p>
+            <span class="profile-role">Admin</span>
+          </div>
+        </div>
+        <div class="profile-meta">
+          <% if (adminEmail) { %><span class="meta-line"><%= adminEmail %></span><% } %>
+          <% if (adminPhone) { %><span class="meta-line"><%= adminPhone %></span><% } %>
+          <% if (adminId) { %><span class="meta-line">ID <%= adminId %></span><% } %>
+        </div>
+      </section>
+
+      <nav class="nav">
+        <span class="nav-label">Workspace</span>
+        <a class="nav-item active" href="<%= dashboardPath %>">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+          Dashboard
+        </a>
+        <a class="nav-item" href="#scheduler">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+          Scheduler
+        </a>
+        <a class="nav-item" href="#candidates">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-8 0v2"/><circle cx="12" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg>
+          Candidates
+        </a>
+        <a class="nav-item" href="#activity">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>
+          Activity
+        </a>
+      </nav>
+
+      <div class="sidebar-foot">
+        <a class="nav-item" href="/Homepage">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          View site
+        </a>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <a class="mobile-brand" href="/Homepage">
+          <span class="brand-mark" aria-hidden="true">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 12h16"/><path d="M4 6h10"/><path d="M4 18h7"/>
+            </svg>
+          </span>
+          hireflow
+        </a>
+        <div class="crumb">hireflow <span>/</span> <span>Admin dashboard</span></div>
+        <div class="top-actions">
+          <span class="clock" id="liveTime">--:--:--</span>
+          <a class="btn btn-light" href="/Homepage">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="m10 14 11-11"/></svg>
+            Site
+          </a>
+        </div>
+      </header>
+
+      <div class="content">
+        <section class="hero">
+          <div>
+            <p class="eyebrow">Operations center</p>
+            <h1>Good to see you, <%= firstName %>.</h1>
+            <p class="hero-copy">Publish LinkedIn roles, monitor the recruiting inbox, and track candidates from reply to interview booking all in one go.</p>
+          </div>
+          <div class="status-stack" aria-label="Connection status">
+            <span class="pill <%= connected ? 'on' : 'off' %>"><span class="pill-dot"></span><%= connected ? 'LinkedIn ready' : 'LinkedIn disconnected' %></span>
+            <span class="pill <%= recEngine.connected ? 'on' : 'warn' %>"><span class="pill-dot"></span><%= recEngine.connected ? 'RecruiterOS live' : 'RecruiterOS pending' %></span>
+          </div>
+        </section>
+
+        <section class="metrics" aria-label="Dashboard metrics">
+          <article class="metric" style="--accent: var(--blue);">
+            <div class="metric-label">Scheduled posts</div>
+            <div class="metric-value"><%= dashStats.postsScheduled || 0 %></div>
+            <div class="metric-note"><%= dashStats.postsDue || 0 %> ready to publish</div>
+          </article>
+          <article class="metric" style="--accent: var(--violet);">
+            <div class="metric-label">Resumes received</div>
+            <div class="metric-value"><%= dashStats.resumesReceived || 0 %></div>
+            <div class="metric-note"><%= dashStats.needsReview || 0 %> need review</div>
+          </article>
+          <article class="metric" style="--accent: var(--green);">
+            <div class="metric-label">Responses sent</div>
+            <div class="metric-value"><%= dashStats.responsesSent || 0 %></div>
+            <div class="metric-note"><%= dashStats.processedToday || 0 %> emails today</div>
+          </article>
+          <article class="metric" style="--accent: var(--pink);">
+            <div class="metric-label">Meets booked</div>
+            <div class="metric-value"><%= dashStats.meetingsBooked || 0 %></div>
+            <div class="metric-note"><%= dashStats.rejected || 0 %> rejected</div>
+          </article>
+        </section>
+
+        <section class="pipeline" aria-label="Combined hiring pipeline">
+          <div class="section-head">
+            <div>
+              <h2 class="section-title">Combined pipeline</h2>
+              <p class="section-sub">We flow from job openings to interviews all through one pipeline.</p>
+            </div>
+            <span class="pill <%= recEngine.connected ? 'on' : 'warn' %>"><span class="pill-dot"></span><%= recEngine.connected ? 'Data live' : 'Awaiting data' %></span>
+          </div>
+          <div class="pipeline-grid">
+            <div class="pipe-step">
+              <div class="pipe-kicker">01 Post</div>
+              <div class="pipe-number"><%= dashStats.postsScheduled || 0 %></div>
+              <div class="pipe-label">scheduled LinkedIn jobs</div>
+            </div>
+            <div class="pipe-step">
+              <div class="pipe-kicker">02 Inbox</div>
+              <div class="pipe-number"><%= dashStats.processedEmails || 0 %></div>
+              <div class="pipe-label">emails processed</div>
+            </div>
+            <div class="pipe-step">
+              <div class="pipe-kicker">03 Screen</div>
+              <div class="pipe-number"><%= dashStats.resumesReceived || 0 %></div>
+              <div class="pipe-label">candidate records</div>
+            </div>
+            <div class="pipe-step">
+              <div class="pipe-kicker">04 Review</div>
+              <div class="pipe-number"><%= dashStats.needsReview || 0 %></div>
+              <div class="pipe-label">manual checks</div>
+            </div>
+            <div class="pipe-step">
+              <div class="pipe-kicker">05 Book</div>
+              <div class="pipe-number"><%= dashStats.meetingsBooked || 0 %></div>
+              <div class="pipe-label">booking links sent</div>
+            </div>
+          </div>
+        </section>
+
+        <div class="grid">
+          <section class="card feature" id="scheduler">
+            <div class="section-head">
+              <div>
+                <h2 class="section-title">Schedule a post</h2>
+                <p class="section-sub">Create a LinkedIn hiring update and publish it now or queue it for later.</p>
+              </div>
+              <span class="pill <%= connected ? 'on' : 'off' %>"><span class="pill-dot"></span><%= connected ? 'Ready' : 'Connect first' %></span>
+            </div>
+
+            <form method="POST" action="<%= dashboardPath %>" enctype="multipart/form-data" id="postForm" class="form-grid" novalidate>
+              <div class="field">
+                <label for="content-field">Post content</label>
+                <textarea id="content-field" name="content" placeholder="Write the update. Mention the role, location, must-have skills, and why candidates should care." maxlength="3000"><%= draft.content || '' %></textarea>
+                <div class="input-foot">
+                  <span>Keep it specific and scannable.</span>
+                  <span class="counter" id="charCount">0 / 3000</span>
+                </div>
+                <p class="error <%= errs.content ? 'visible' : '' %>" id="content-error"><%= errs.content || 'Write something before saving.' %></p>
+              </div>
+
+              <div class="field">
+                <label for="photoInput">Attach image <span class="optional">(optional)</span></label>
+                <label class="upload" id="uploadZone" for="photoInput" tabindex="0">
+                  <span class="upload-thumb" id="uploadThumb">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/>
+                    </svg>
+                  </span>
+                  <span>
+                    <span class="upload-title" id="uploadLabel">Drop an image or click to browse</span>
+                    <span class="upload-copy">PNG or JPG, up to 5 MB.</span>
+                  </span>
+                  <input type="file" name="image" id="photoInput" accept="image/png,image/jpeg">
+                </label>
+              </div>
+
+              <div class="field">
+                <label>Publish time</label>
+                <div class="field-row">
+                  <div class="field">
+                    <label for="date-field" class="optional">Date</label>
+                    <input type="date" id="date-field" name="scheduled_date" value="<%= draft.scheduled_date || '' %>">
+                  </div>
+                  <div class="field">
+                    <label for="time-field" class="optional">Time</label>
+                    <input type="time" id="time-field" name="scheduled_time" value="<%= draft.scheduled_time || '' %>">
+                  </div>
+                  <div class="field">
+                    <label for="tz-field" class="optional">Timezone</label>
+                    <select id="tz-field" name="timezone">
+                      <option value="">Auto-detect</option>
+                      <% timezones.forEach(function(tz) { %>
+                        <option value="<%= tz[0] %>" <%= draft.timezone === tz[0] ? 'selected' : '' %>><%= tz[1] %></option>
+                      <% }); %>
+                    </select>
+                  </div>
+                </div>
+                <div class="schedule-preview" id="schedPreview">
+                  <span class="chip" id="schedChipDate"><span id="schedChipDateVal"></span></span>
+                  <span class="chip" id="schedChipTime"><span id="schedChipTimeVal"></span></span>
+
+              </div>
+
+              <button type="submit" class="btn btn-primary" id="submitBtn">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+                Save post
+              </button>
+            </form>
+          </section>
+
+          <aside class="stack">
+            <section class="card integration-card">
+              <div class="section-head">
+                <div>
+                  <h2 class="section-title">LinkedIn</h2>
+                  <p class="section-sub">Company page integration</p>
+                </div>
+                <span class="pill <%= connected ? 'on' : 'off' %>"><span class="pill-dot"></span><%= connected ? 'Connected' : 'Disconnected' %></span>
+              </div>
+              <% if (connected && typeof linkedin !== 'undefined' && linkedin.pageName) { %>
+                <div class="linkedin-page">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6ZM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>
+                  <span><%= linkedin.pageName %></span>
+                </div>
+              <% } else { %>
+                <p class="section-sub">Connect a company page so scheduled posts can publish automatically.</p>
+              <% } %>
+               <form method="POST" action="/admin/linkedin" id="linkedinConnectForm">
+                <button type="submit" name="ConnectAccount" class="btn btn-light" style="width:100%;" id="connectBtn">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6ZM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>
+                  <%= connected ? 'Reconnect account' : 'Connect account' %>
+                </button>
+              </form>
+              <% if (typeof vncPassword !== 'undefined' && vncPassword) { %>
+                <p class="section-sub" style="margin-top: 8px; font-family: 'JetBrains Mono', monospace; font-size: 12px;">
+                  VNC session password: <b style="color: var(--ink);"><%= vncPassword %></b>
+                </p>
+              <% } %>
+            </section>
+
+            <section class="card integration-card">
+              <div class="section-head">
+                <div>
+                  <h2 class="section-title">RecruiterOS</h2>
+                  <p class="section-sub">Gmail scanner, reply parser, and booking flow</p>
+                </div>
+                <span class="pill <%= recEngine.gmailConnected ? 'on' : 'warn' %>"><span class="pill-dot"></span><%= recEngine.gmailConnected ? 'Gmail live' : 'Gmail pending' %></span>
+              </div>
+
+              <% if (recEngine.gmailConnected && recEngine.gmailEmail) { %>
+                <div class="linkedin-page" style="color: #ea4335;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                  <span><%= recEngine.gmailEmail %></span>
+                </div>
+              <% } else { %>
+                <p class="section-sub">Connect your Gmail so RecruiterOS can scan your inbox for job applications and send screening emails automatically.</p>
+              <% } %>
+
+              <div class="engine-grid" style="margin-top: 12px;">
+                <div class="engine-item">
+                  <div class="engine-label">Scanner</div>
+                  <div class="engine-value"><%= recEngine.scannerCadence || 'Every 2 min' %></div>
+                </div>
+                <div class="engine-item">
+                  <div class="engine-label">Booking</div>
+                  <div class="engine-value"><%= recEngine.bookingConfigured ? 'Configured' : 'Missing' %></div>
+                </div>
+                <div class="engine-item">
+                  <div class="engine-label">Processed</div>
+                  <div class="engine-value"><%= dashStats.processedEmails || 0 %></div>
+                </div>
+                <div class="engine-item">
+                  <div class="engine-label">Candidates</div>
+                  <div class="engine-value"><%= dashStats.resumesReceived || 0 %></div>
+                </div>
+              </div>
+
+              <a href="/admin/google/connect" class="btn btn-light" style="width:100%; margin-top: 12px; display:inline-flex; align-items:center; justify-content:center; gap:8px; text-decoration:none;">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                <%= recEngine.gmailConnected ? 'Reconnect Gmail' : 'Connect Gmail' %>
+              </a>
+            </section>
+
+            <section class="card" id="candidates">
+              <div class="section-head">
+                <div>
+                  <h2 class="section-title">Recent candidates</h2>
+                  <p class="section-sub">Latest records from the email engine</p>
+                </div>
+              </div>
+              <div class="candidate-list">
+                <% if (recentCandidates.length) { %>
+                  <% recentCandidates.forEach(function(candidate) { %>
+                    <div class="candidate-row">
+                      <div>
+                        <div class="candidate-name"><%= candidate.name || candidate.email || 'Unnamed candidate' %></div>
+                        <div class="candidate-meta">
+                          <%= candidate.email || 'No email' %><% if (candidate.location) { %> · <%= candidate.location %><% } %>
+                        </div>
+                      </div>
+                      <span class="stage-pill <%= stageClass(candidate.stage) %>"><%= stageLabel(candidate.stage) %></span>
+                    </div>
+                  <% }); %>
+                <% } else { %>
+                  <div class="empty">Candidate records will appear after RecruiterOS processes email.</div>
+                <% } %>
+              </div>
+            </section>
+
+            <section class="card" id="activity">
+              <div class="section-head">
+                <div>
+                  <h2 class="section-title">Activity</h2>
+                  <p class="section-sub">Pipeline events as they arrive</p>
+                </div>
+                <span class="log-live"><span class="log-live-dot"></span>Live</span>
+              </div>
+              <div class="log-list" id="activityLog">
+                <% if (log.length) { %>
+                  <% log.forEach(function(item) { %>
+                    <div class="log-item">
+                      <span class="log-time"><%= item.time %></span>
+                      <div class="log-body">
+                        <%= item.label %> <b><%= item.verb %></b>
+                        <% if (item.detail) { %><span class="log-detail"> - <%= item.detail %></span><% } %>
+                      </div>
+                    </div>
+                  <% }); %>
+                <% } else { %>
+                  <div class="empty">Actions will appear here as the pipeline runs.</div>
+                <% } %>
+              </div>
+            </section>
+          </aside>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      var clockEl = document.getElementById('liveTime');
+      function tick() {
+        if (!clockEl) return;
+        clockEl.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      }
+      tick();
+      setInterval(tick, 1000);
+
+      var tzField = document.getElementById('tz-field');
+      if (tzField && !tzField.value) {
+        try {
+          var tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+          var match = tzField.querySelector('option[value="' + tz + '"]');
+          if (match) tzField.value = tz;
+        } catch (e) {}
+      }
+
+      var dateField = document.getElementById('date-field');
+      var timeField = document.getElementById('time-field');
+      if (dateField) dateField.min = new Date().toISOString().slice(0, 10);
+
+      var contentField = document.getElementById('content-field');
+      var charCount = document.getElementById('charCount');
+      var max = 3000;
+      function updateCount() {
+        if (!contentField || !charCount) return;
+        var len = contentField.value.length;
+        charCount.textContent = len + ' / ' + max;
+        charCount.className = 'counter' + (len > max * .95 ? ' danger' : len > max * .8 ? ' warn' : '');
+      }
+      if (contentField) contentField.addEventListener('input', updateCount);
+      updateCount();
+
+      var schedPreview = document.getElementById('schedPreview');
+      var schedChipDate = document.getElementById('schedChipDate');
+      var schedChipDateVal = document.getElementById('schedChipDateVal');
+      var schedChipTime = document.getElementById('schedChipTime');
+      var schedChipTimeVal = document.getElementById('schedChipTimeVal');
+
+      function updateSchedule() {
+        if (!dateField || !timeField || !schedPreview) return;
+        var date = dateField.value;
+        var time = timeField.value;
+        schedPreview.style.display = date || time ? 'flex' : 'none';
+        if (date) {
+          var parts = date.split('-');
+          schedChipDate.style.display = 'inline-flex';
+          schedChipDateVal.textContent = parts.length === 3 ? parts[2] + '/' + parts[1] + '/' + parts[0] : date;
+        } else {
+          schedChipDate.style.display = 'none';
+        }
+        if (time) {
+          schedChipTime.style.display = 'inline-flex';
+          schedChipTimeVal.textContent = time;
+        } else {
+          schedChipTime.style.display = 'none';
+        }
+      }
+      if (dateField) dateField.addEventListener('change', updateSchedule);
+      if (timeField) timeField.addEventListener('change', updateSchedule);
+      updateSchedule();
+
+      var photoInput = document.getElementById('photoInput');
+      var uploadZone = document.getElementById('uploadZone');
+      var uploadThumb = document.getElementById('uploadThumb');
+      var uploadLabel = document.getElementById('uploadLabel');
+
+      function handleFile(file) {
+        if (!file || !uploadLabel || !uploadThumb) return;
+        uploadLabel.textContent = file.name;
+        var reader = new FileReader();
+        reader.onload = function (event) {
+          uploadThumb.innerHTML = '<img src="' + event.target.result + '" alt="">';
+        };
+        reader.readAsDataURL(file);
+      }
+
+      if (photoInput) photoInput.addEventListener('change', function () { handleFile(photoInput.files[0]); });
+      if (uploadZone) {
+        ['dragover', 'dragenter'].forEach(function (eventName) {
+          uploadZone.addEventListener(eventName, function (event) {
+            event.preventDefault();
+            uploadZone.classList.add('dragover');
+          });
+        });
+        ['dragleave', 'drop'].forEach(function (eventName) {
+          uploadZone.addEventListener(eventName, function (event) {
+            event.preventDefault();
+            uploadZone.classList.remove('dragover');
+          });
+        });
+        uploadZone.addEventListener('drop', function (event) {
+          var file = event.dataTransfer.files[0];
+          if (file) {
+            photoInput.files = event.dataTransfer.files;
+            handleFile(file);
+          }
+        });
+        uploadZone.addEventListener('keydown', function (event) {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            photoInput.click();
+          }
+        });
+      }
+
+      var form = document.getElementById('postForm');
+      var contentError = document.getElementById('content-error');
+      var submitBtn = document.getElementById('submitBtn');
+      if (form) {
+        form.addEventListener('submit', function (event) {
+          if (!contentField.value.trim()) {
+            event.preventDefault();
+            contentError.classList.add('visible');
+            contentField.focus();
+            return;
+          }
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="animation:spin .75s linear infinite"><path d="M21 12a9 9 0 1 1-6.2-8.56"/></svg> Saving';
+        });
+      }
+      if (contentField) {
+        contentField.addEventListener('input', function () {
+          if (contentField.value.trim()) contentError.classList.remove('visible');
+        });
+      }
+
+      var linkedinForm = document.getElementById('linkedinConnectForm');
+      if (linkedinForm) {
+        linkedinForm.addEventListener('submit', function (e) {
+          e.preventDefault();
+
+          var btn = document.getElementById('connectBtn');
+          var originalHTML = btn.innerHTML;
+          btn.disabled = true;
+          btn.innerHTML = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="animation:spin .75s linear infinite"><path d="M21 12a9 9 0 1 1-6.2-8.56"/></svg> Starting session';
+
+          fetch(linkedinForm.action, { method: 'POST' })
+            .then(function (res) {
+              if (!res.ok) throw new Error('Request failed');
+              window.location.href = "http://airehire.ap-south-1.elasticbeanstalk.com:6080/vnc.html?quality=1&compression=9&resize=scale&autoconnect=true";
+            })
+            .catch(function (err) {
+              console.error('Failed to start LinkedIn connect session:', err);
+              alert('Could not start the LinkedIn connect session. Please try again.');
+              btn.disabled = false;
+              btn.innerHTML = originalHTML;
+            });
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

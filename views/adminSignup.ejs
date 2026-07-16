@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= pageTitle %></title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'ui-sans-serif', 'system-ui'],
+            display: ['Space Grotesk', 'ui-sans-serif', 'system-ui'],
+            mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50:  '#eef1ff',
+              100: '#dee4fe',
+              500: '#3b5bfb',
+              600: '#3049e0',
+              700: '#2538b8',
+            },
+          },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    body { font-family: 'Inter', sans-serif; background: #fafaf9; }
+    @media (prefers-reduced-motion: no-preference) {
+      .fade-up { animation: fadeUp .6s ease both; }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: none; }
+    }
+    input:focus-visible, button:focus-visible, a:focus-visible {
+      outline: 2px solid #3b5bfb;
+      outline-offset: 2px;
+    }
+
+    /* hide real radio inputs, style the cards */
+    .otp-radio { display: none; }
+    .otp-card {
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-radius: 0.75rem;
+      border: 1px solid #e5e7eb;
+      padding: 14px 16px;
+      transition: border-color .15s, background .15s;
+    }
+    .otp-radio:checked + .otp-card {
+      border-color: #3b5bfb;
+      background: rgba(238,241,255,0.5);
+    }
+    .otp-icon {
+      width: 36px; height: 36px;
+      border-radius: 9999px;
+      background: #f3f4f6;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: background .15s;
+    }
+    .otp-radio:checked + .otp-card .otp-icon {
+      background: #dee4fe;
+    }
+  </style>
+</head>
+<body class="text-[#0a0a0a] antialiased">
+
+  <header class="border-b border-gray-100">
+    <div class="max-w-6xl mx-auto px-6 py-5 flex items-center justify-between">
+      <a href="/Homepage" class="flex items-center gap-2 font-display font-semibold text-[15px]">
+        <span class="w-2 h-2 rounded-full bg-brand-500 inline-block"></span>
+        hireflow
+      </a>
+      <div class="flex items-center gap-3 text-sm">
+        <span class="text-gray-500 hidden sm:inline">Already have an account?</span>
+        <a href="/admin/signin" class="font-semibold text-brand-600 hover:text-brand-700 transition">Sign in</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-6 py-14 sm:py-20">
+    <div class="grid lg:grid-cols-2 gap-14 lg:gap-20 items-start">
+
+      <!-- Left: marketing copy -->
+      <div class="fade-up lg:pt-2">
+        <p class="font-mono text-xs font-medium uppercase tracking-[0.2em] text-brand-600 mb-4">Admin access</p>
+        <h1 class="font-display font-bold text-4xl sm:text-[2.75rem] leading-[1.1] tracking-tight mb-5">
+          Set up your<br>hiring workspace.
+        </h1>
+        <p class="text-gray-500 text-[15px] leading-relaxed max-w-md mb-12">
+          Create your admin account and Hireflow takes it from there — publishing jobs, reading resumes, replying to candidates, and booking interviews automatically.
+        </p>
+
+        <p class="font-mono text-[11px] uppercase tracking-[0.2em] text-gray-400 mb-5">What happens next</p>
+        <ol class="space-y-6">
+          <li class="flex items-start gap-4">
+            <div class="w-9 h-9 rounded-full bg-brand-50 text-brand-600 flex items-center justify-center shrink-0">
+              <i class="fa-solid fa-user text-[13px]"></i>
+            </div>
+            <div>
+              <p class="font-mono text-[11px] text-gray-400 mb-0.5">01</p>
+              <p class="text-sm font-semibold">Create your account</p>
+              <p class="text-xs text-gray-500 mt-0.5">Tell us who's setting things up.</p>
+            </div>
+          </li>
+          <li class="flex items-start gap-4">
+            <div class="w-9 h-9 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+              <i class="fa-solid fa-shield-halved text-[13px]"></i>
+            </div>
+            <div>
+              <p class="font-mono text-[11px] text-gray-400 mb-0.5">02</p>
+              <p class="text-sm font-semibold">Verify it's you</p>
+              <p class="text-xs text-gray-500 mt-0.5">A one-time code, sent your way.</p>
+            </div>
+          </li>
+          <li class="flex items-start gap-4">
+            <div class="w-9 h-9 rounded-full bg-brand-50 text-brand-600 flex items-center justify-center shrink-0">
+              <i class="fa-solid fa-gauge text-[13px]"></i>
+            </div>
+            <div>
+              <p class="font-mono text-[11px] text-gray-400 mb-0.5">03</p>
+              <p class="text-sm font-semibold">Workspace ready</p>
+              <p class="text-xs text-gray-500 mt-0.5">Your hiring dashboard, provisioned instantly.</p>
+            </div>
+          </li>
+          <li class="flex items-start gap-4">
+            <div class="w-9 h-9 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+              <i class="fa-solid fa-bolt text-[13px]"></i>
+            </div>
+            <div>
+              <p class="font-mono text-[11px] text-gray-400 mb-0.5">04</p>
+              <p class="text-sm font-semibold">Post your first job</p>
+              <p class="text-xs text-gray-500 mt-0.5">Publish an opening and watch candidates come in.</p>
+            </div>
+          </li>
+        </ol>
+      </div>
+
+      <!-- Right: single unified form -->
+      <div class="fade-up" style="animation-delay:.1s">
+        <div class="bg-white border border-gray-200 rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,0.04),0_12px_32px_-12px_rgba(0,0,0,0.08)] p-7 sm:p-9">
+
+          <h2 class="font-display font-semibold text-xl mb-6">Create your account</h2>
+
+          <form method="POST" action="/admin/signup" class="space-y-4">
+
+            <!-- name -->
+            <div>
+              <label for="adminName" class="block text-xs font-medium text-gray-500 mb-1.5">Full name</label>
+              <div class="relative">
+                <i class="fa-regular fa-user absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                <input type="text" id="adminName" name="name" placeholder="Jordan Lee" required
+                  class="w-full rounded-xl border border-gray-200 pl-10 pr-4 py-2.5 text-sm placeholder:text-gray-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15 transition">
+              </div>
+            </div>
+
+            <!-- phone -->
+            <div>
+              <label for="adminNumber" class="block text-xs font-medium text-gray-500 mb-1.5">Phone number</label>
+              <div class="relative">
+                <i class="fa-solid fa-phone absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                <input type="tel" id="adminNumber" name="phonenumber" placeholder="+91 98765 43210" required
+                  class="w-full rounded-xl border border-gray-200 pl-10 pr-4 py-2.5 text-sm placeholder:text-gray-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15 transition">
+              </div>
+              <p class="text-xs text-gray-400 mt-1.5">Include your country code.</p>
+            </div>
+
+
+            <div>
+              <label for="adminEmail" class="block text-xs font-medium text-gray-500 mb-1.5">Email</label>
+              <div class="relative">
+                <i class="fa-regular fa-envelope absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                <input type="email" id="adminEmail" name="email" placeholder="you@company.com" required
+                  class="w-full rounded-xl border border-gray-200 pl-10 pr-4 py-2.5 text-sm placeholder:text-gray-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15 transition">
+              </div>
+            </div>
+
+            <!-- OTP method — radio cards, name="otpMethod" -->
+            <div>
+              <p class="block text-xs font-medium text-gray-500 mb-2">Send verification code via</p>
+              <div class="grid sm:grid-cols-2 gap-3">
+
+                <div>
+                  <input class="otp-radio" type="radio" id="otpSMS" name="otpMethod" value="SMS" required>
+                  <label for="otpSMS" class="otp-card">
+                    <span class="otp-icon">
+                      <i class="fa-solid fa-phone text-brand-600 text-[13px]"></i>
+                    </span>
+                    <span>
+                      <span class="block text-sm font-semibold">Text me a code</span>
+                      <span class="block text-xs text-gray-500">via SMS</span>
+                    </span>
+                  </label>
+                </div>
+
+                <div>
+                  <input class="otp-radio" type="radio" id="otpEmail" name="otpMethod" value="Email" required>
+                  <label for="otpEmail" class="otp-card">
+                    <span class="otp-icon">
+                      <i class="fa-regular fa-envelope text-brand-600 text-[13px]"></i>
+                    </span>
+                    <span>
+                      <span class="block text-sm font-semibold">Email me a code</span>
+                      <span class="block text-xs text-gray-500">to your inbox</span>
+                    </span>
+                  </label>
+                </div>
+
+              </div>
+            </div>
+
+            <button type="submit"
+              class="w-full bg-[#0a0a0a] hover:bg-black text-white rounded-full font-semibold text-sm py-3 mt-2 transition">
+              Continue
+            </button>
+          </form>
+
+          <div class="my-7 flex items-center gap-3">
+            <div class="h-px bg-gray-100 flex-1"></div>
+            <span class="text-xs text-gray-400">or continue with</span>
+            <div class="h-px bg-gray-100 flex-1"></div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-3">
+            <a href="/admin/auth/google" aria-label="Continue with Google"
+              class="flex items-center justify-center rounded-xl border border-gray-200 py-2.5 hover:bg-gray-50 hover:border-gray-300 transition">
+              <i class="fa-brands fa-google text-[15px]"></i>
+            </a>
+            <a href="/admin/auth/X" aria-label="Continue with X"
+              class="flex items-center justify-center rounded-xl border border-gray-200 py-2.5 hover:bg-gray-50 hover:border-gray-300 transition">
+              <i class="fa-brands fa-x-twitter text-[15px]"></i>
+            </a>
+            <a href="/admin/auth/Linkedin" aria-label="Continue with LinkedIn"
+              class="flex items-center justify-center rounded-xl border border-gray-200 py-2.5 hover:bg-gray-50 hover:border-gray-300 transition">
+              <i class="fa-brands fa-linkedin text-[15px]"></i>
+            </a>
+          </div>
+
+          <p class="text-center text-sm text-gray-500 mt-7">
+            Already have an account?
+            <a href="/admin/signin" class="font-semibold text-brand-600 hover:text-brand-700">Sign in</a>
+          </p>
+
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="text-center text-xs text-gray-400 pb-10">
+    © 2026 Hireflow, Inc.
+  </footer>
+
+</body>
+</html>

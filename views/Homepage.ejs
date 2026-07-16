@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Hireflow — Hiring, automated end to end</title>
+<meta name="description" content="Hireflow posts your roles to LinkedIn, reads every resume that lands in your inbox, replies to candidates automatically, and books the interview." />
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          paper: '#FAFAF8',
+          ink:   '#13151A',
+          cobalt:'#2952FF',
+          amber: '#FF9D2E',
+          sage:  '#1FAA70',
+          mist:  '#E7E8EC',
+        },
+        fontFamily: {
+          display: ['"Space Grotesk"', 'sans-serif'],
+          body: ['"Inter"', 'sans-serif'],
+          mono: ['"JetBrains Mono"', 'monospace'],
+        },
+      },
+    },
+  };
+</script>
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+<style>
+  html { scroll-behavior: smooth; }
+  body { font-family: 'Inter', sans-serif; background: #FAFAF8; color: #13151A; }
+  .font-display { font-family: 'Space Grotesk', sans-serif; }
+  .font-mono { font-family: 'JetBrains Mono', monospace; }
+
+  .reveal { opacity: 0; transform: translateY(22px); transition: opacity .7s ease, transform .7s ease; }
+  .reveal.is-visible { opacity: 1; transform: translateY(0); }
+
+  #siteNav.scrolled { background: rgba(250,250,248,0.8); backdrop-filter: blur(12px); box-shadow: 0 1px 0 rgba(19,21,26,0.06); }
+
+  
+  .pipe-track { position: relative; height: 2px; background: #E7E8EC; overflow: hidden; border-radius: 2px; }
+  .pipe-dot { position: absolute; top: 50%; left: -4%; width: 8px; height: 8px; margin-top: -4px; border-radius: 50%; background: #2952FF; box-shadow: 0 0 10px rgba(41,82,255,.7); animation: travel 2.6s linear infinite; }
+  @keyframes travel {
+    0%   { left: -4%; opacity: 0; }
+    8%   { opacity: 1; }
+    90%  { opacity: 1; }
+    100% { left: 100%; opacity: 0; }
+  }
+
+  .pipe-track-v { position: relative; width: 2px; background: #E7E8EC; border-radius: 2px; }
+  .pipe-dot-v { position: absolute; left: 50%; top: -4%; width: 8px; height: 8px; margin-left: -4px; border-radius: 50%; background: #2952FF; box-shadow: 0 0 10px rgba(41,82,255,.7); animation: travelV 2.6s linear infinite; }
+  @keyframes travelV {
+    0%   { top: -4%; opacity: 0; }
+    8%   { opacity: 1; }
+    90%  { opacity: 1; }
+    100% { top: 100%; opacity: 0; }
+  }
+
+
+  #logFeed div { animation: logIn .4s ease; }
+  @keyframes logIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+
+  .marquee-mask { -webkit-mask-image: linear-gradient(to bottom, transparent, black 12%, black 88%, transparent); mask-image: linear-gradient(to bottom, transparent, black 12%, black 88%, transparent); }
+  .marquee-track { animation: marquee 14s linear infinite; }
+  @keyframes marquee { 0% { transform: translateY(0); } 100% { transform: translateY(-50%); } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pipe-dot, .pipe-dot-v, .marquee-track, #logFeed div { animation: none !important; }
+    .reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
+  }
+
+  :focus-visible { outline: 2px solid #2952FF; outline-offset: 3px; }
+</style>
+</head>
+
+<body class="bg-paper text-ink antialiased">
+
+
+<header id="siteNav" class="fixed top-0 inset-x-0 z-50 transition-colors duration-300">
+  <div class="max-w-7xl mx-auto px-6 lg:px-10">
+    <div class="flex items-center justify-between h-20">
+
+      <a href="#top" class="flex items-center gap-2 font-display text-xl font-bold tracking-tight">
+        <span class="w-2 h-2 rounded-full bg-cobalt"></span>
+        hireflow
+      </a>
+
+      <nav class="hidden lg:flex items-center gap-9 text-sm font-medium text-ink/70">
+        <a href="#how-it-works" class="hover:text-ink transition-colors">How it works</a>
+        <a href="#features" class="hover:text-ink transition-colors">Features</a>
+        <a href="#always-on" class="hover:text-ink transition-colors">Always on</a>
+        <a href="#contact" class="hover:text-ink transition-colors">Contact</a>
+      </nav>
+
+      <div class="hidden lg:flex items-center gap-5">
+        <div class="relative">
+          <button id="staffMenuBtn" type="button" class="flex items-center gap-1.5 text-sm text-ink/55 hover:text-ink transition-colors" aria-haspopup="true" aria-expanded="false">
+            Staff sign in
+            <i id="staffChevron" class="fa-solid fa-chevron-down text-[10px] transition-transform"></i>
+          </button>
+          <div id="staffMenu" class="hidden absolute right-0 mt-3 w-44 rounded-xl border border-mist bg-white shadow-xl p-1.5">
+            <button type="button" onclick='window.location.href="/admin/welcome"' class="w-full text-left px-3 py-2 rounded-lg text-sm text-ink/80 hover:bg-paper transition-colors">
+              Admin
+            </button>
+            <button type="button" onclick='window.location.href="/superAdmin/welcome/singin"' class="w-full text-left px-3 py-2 rounded-lg text-sm text-ink/80 hover:bg-paper transition-colors">
+              SuperAdmin
+            </button>
+          </div>
+        </div>
+
+        <a href="#cta" class="inline-flex items-center gap-2 bg-ink text-paper text-sm font-medium px-5 py-2.5 rounded-full hover:bg-cobalt transition-colors">
+          Book a demo
+        </a>
+      </div>
+
+      <button id="mobileMenuBtn" type="button" class="lg:hidden w-10 h-10 flex items-center justify-center" aria-label="Open menu" aria-expanded="false">
+        <i class="fa-solid fa-bars text-lg"></i>
+      </button>
+    </div>
+  </div>
+
+
+  <div id="mobileMenu" class="hidden lg:hidden border-t border-mist bg-paper">
+    <div class="max-w-7xl mx-auto px-6 py-5 flex flex-col gap-4 text-sm font-medium">
+      <a href="#how-it-works" class="py-1">How it works</a>
+      <a href="#features" class="py-1">Features</a>
+      <a href="#always-on" class="py-1">Always on</a>
+      <a href="#contact" class="py-1">Contact</a>
+      <hr class="border-mist" />
+      <button type="button" onclick='window.location.href="/admin/welcome"' class="text-left py-1 text-ink/70">Admin sign in</button>
+      <button type="button" onclick='window.location.href="/superAdmin/welcome/singin"' class="text-left py-1 text-ink/70">SuperAdmin sign in</button>
+      <a href="#cta" class="mt-1 inline-flex justify-center bg-ink text-paper px-5 py-2.5 rounded-full">Book a demo</a>
+    </div>
+  </div>
+</header>
+
+
+<section id="top" class="pt-40 pb-20 px-6 lg:px-10">
+  <div class="max-w-5xl mx-auto text-center">
+    <p class="font-mono text-xs uppercase tracking-[0.2em] text-cobalt mb-6">From job post to booked interview</p>
+
+    <h1 class="font-display font-semibold text-[clamp(2.4rem,6vw,4.6rem)] leading-[1.05] tracking-tight">
+      Post a job.<br />
+      Walk into a calendar<br class="hidden sm:block" /> full of interviews.
+    </h1>
+
+    <p class="mt-7 text-lg text-ink/60 max-w-2xl mx-auto leading-relaxed">
+      Hireflow publishes your opening to LinkedIn, reads every resume that lands in your inbox, replies to each candidate, and books the interview — before your coffee's cold.
+    </p>
+
+    <div class="mt-9 flex flex-wrap items-center justify-center gap-4">
+      <a href="#cta" class="bg-cobalt text-white text-sm font-medium px-7 py-3.5 rounded-full hover:bg-ink transition-colors">
+        Start free trial
+      </a>
+      <a href="#pipeline" class="flex items-center gap-2 text-sm font-medium text-ink/70 hover:text-ink px-7 py-3.5 rounded-full border border-mist transition-colors">
+        <i class="fa-solid fa-play text-xs"></i> Watch it work
+      </a>
+    </div>
+  </div>
+
+
+  <div id="pipeline" class="max-w-5xl mx-auto mt-20 reveal">
+    <div class="rounded-2xl border border-mist bg-white p-7 lg:p-9 shadow-sm">
+
+     
+      <div class="hidden md:grid grid-cols-5 gap-0 items-start">
+        <!-- step 1 -->
+        <div class="flex flex-col items-center text-center px-2">
+          <div class="w-12 h-12 rounded-full bg-paper border border-mist flex items-center justify-center text-cobalt"><i class="fa-brands fa-linkedin-in"></i></div>
+          <p class="font-mono text-[11px] mt-3 text-ink/45">01</p>
+          <p class="text-sm font-medium mt-1">Posted</p>
+        </div>
+        <div class="pipe-track mt-6"><span class="pipe-dot" style="animation-delay:0s"></span></div>
+  
+        <div class="flex flex-col items-center text-center px-2" style="grid-column:2/3"></div>
+      </div>
+
+      <!-- the grid above is awkward for 5 nodes + 4 connectors, so we lay it out manually below -->
+      <div class="hidden md:flex items-start justify-between">
+        <div class="flex flex-col items-center text-center w-1/5">
+          <div class="w-12 h-12 rounded-full bg-paper border border-mist flex items-center justify-center text-cobalt"><i class="fa-brands fa-linkedin-in"></i></div>
+          <p class="font-mono text-[11px] mt-3 text-ink/45">01</p>
+          <p class="text-sm font-medium mt-1">Posted</p>
+        </div>
+        <div class="pipe-track flex-1 mt-6 mx-1"><span class="pipe-dot" style="animation-delay:0s"></span></div>
+
+        <div class="flex flex-col items-center text-center w-1/5">
+          <div class="w-12 h-12 rounded-full bg-paper border border-mist flex items-center justify-center text-amber"><i class="fa-solid fa-envelope-open-text"></i></div>
+          <p class="font-mono text-[11px] mt-3 text-ink/45">02</p>
+          <p class="text-sm font-medium mt-1">Resume in</p>
+        </div>
+        <div class="pipe-track flex-1 mt-6 mx-1"><span class="pipe-dot" style="animation-delay:.5s"></span></div>
+
+        <div class="flex flex-col items-center text-center w-1/5">
+          <div class="w-12 h-12 rounded-full bg-paper border border-mist flex items-center justify-center text-cobalt"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+          <p class="font-mono text-[11px] mt-3 text-ink/45">03</p>
+          <p class="text-sm font-medium mt-1">Parsed</p>
+        </div>
+        <div class="pipe-track flex-1 mt-6 mx-1"><span class="pipe-dot" style="animation-delay:1s"></span></div>
+
+        <div class="flex flex-col items-center text-center w-1/5">
+          <div class="w-12 h-12 rounded-full bg-paper border border-mist flex items-center justify-center text-amber"><i class="fa-solid fa-reply"></i></div>
+          <p class="font-mono text-[11px] mt-3 text-ink/45">04</p>
+          <p class="text-sm font-medium mt-1">Replied</p>
+        </div>
+        <div class="pipe-track flex-1 mt-6 mx-1"><span class="pipe-dot" style="animation-delay:1.5s"></span></div>
+
+        <div class="flex flex-col items-center text-center w-1/5">
+          <div class="w-12 h-12 rounded-full bg-paper border border-mist flex items-center justify-center text-sage"><i class="fa-solid fa-calendar-check"></i></div>
+          <p class="font-mono text-[11px] mt-3 text-ink/45">05</p>
+          <p class="text-sm font-medium mt-1">Booked</p>
+        </div>
+      </div>
+
+    
+      <div class="md:hidden flex flex-col gap-0">
+        <div class="flex items-center gap-4">
+          <div class="w-11 h-11 rounded-full bg-paper border border-mist flex items-center justify-center text-cobalt shrink-0"><i class="fa-brands fa-linkedin-in"></i></div>
+          <p class="text-sm font-medium">Posted to LinkedIn</p>
+        </div>
+        <div class="pipe-track-v h-8 ml-[1.35rem]"><span class="pipe-dot-v" style="animation-delay:0s"></span></div>
+        <div class="flex items-center gap-4">
+          <div class="w-11 h-11 rounded-full bg-paper border border-mist flex items-center justify-center text-amber shrink-0"><i class="fa-solid fa-envelope-open-text"></i></div>
+          <p class="text-sm font-medium">Resume received</p>
+        </div>
+        <div class="pipe-track-v h-8 ml-[1.35rem]"><span class="pipe-dot-v" style="animation-delay:.5s"></span></div>
+        <div class="flex items-center gap-4">
+          <div class="w-11 h-11 rounded-full bg-paper border border-mist flex items-center justify-center text-cobalt shrink-0"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+          <p class="text-sm font-medium">Parsed &amp; scored</p>
+        </div>
+        <div class="pipe-track-v h-8 ml-[1.35rem]"><span class="pipe-dot-v" style="animation-delay:1s"></span></div>
+        <div class="flex items-center gap-4">
+          <div class="w-11 h-11 rounded-full bg-paper border border-mist flex items-center justify-center text-amber shrink-0"><i class="fa-solid fa-reply"></i></div>
+          <p class="text-sm font-medium">Reply sent</p>
+        </div>
+        <div class="pipe-track-v h-8 ml-[1.35rem]"><span class="pipe-dot-v" style="animation-delay:1.5s"></span></div>
+        <div class="flex items-center gap-4">
+          <div class="w-11 h-11 rounded-full bg-paper border border-mist flex items-center justify-center text-sage shrink-0"><i class="fa-solid fa-calendar-check"></i></div>
+          <p class="text-sm font-medium">Interview booked</p>
+        </div>
+      </div>
+
+     
+      <div class="mt-9 pt-7 border-t border-mist">
+        <p class="font-mono text-[11px] uppercase tracking-widest text-ink/40 mb-3">Live operations log</p>
+        <div id="logFeed" class="font-mono text-[12.5px] leading-7 text-ink/60 space-y-0.5 h-[7.5rem] overflow-hidden"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section id="how-it-works" class="px-6 lg:px-10 py-24 lg:py-32">
+  <div class="max-w-5xl mx-auto">
+    <div class="reveal max-w-xl">
+      <p class="font-mono text-xs uppercase tracking-[0.2em] text-cobalt mb-4">The pipeline</p>
+      <h2 class="font-display font-semibold text-3xl lg:text-4xl tracking-tight">Five steps. Zero manual handoffs.</h2>
+      <p class="mt-4 text-ink/60 leading-relaxed">Each stage runs the moment the one before it finishes — so a candidate can apply and get a confirmed interview time without anyone on your team touching a keyboard.</p>
+    </div>
+
+    <div class="mt-16 space-y-0">
+
+      <div class="reveal flex flex-col sm:flex-row gap-6 sm:gap-10 py-8 border-t border-mist">
+        <p class="font-mono text-sm text-ink/35 sm:w-12 shrink-0">01</p>
+        <div class="sm:w-56 shrink-0">
+          <p class="font-display font-medium text-lg">Post once, everywhere</p>
+        </div>
+        <p class="text-ink/60 leading-relaxed">Create a role inside Hireflow and it's published straight to LinkedIn — same description, same screening questions, no second tab.</p>
+      </div>
+
+      <div class="reveal flex flex-col sm:flex-row gap-6 sm:gap-10 py-8 border-t border-mist">
+        <p class="font-mono text-sm text-ink/35 sm:w-12 shrink-0">02</p>
+        <div class="sm:w-56 shrink-0">
+          <p class="font-display font-medium text-lg">Resumes land where you already work</p>
+        </div>
+        <p class="text-ink/60 leading-relaxed">Applications arrive by email, the way candidates expect. Hireflow watches the inbox so no one has to refresh it.</p>
+      </div>
+
+      <div class="reveal flex flex-col sm:flex-row gap-6 sm:gap-10 py-8 border-t border-mist">
+        <p class="font-mono text-sm text-ink/35 sm:w-12 shrink-0">03</p>
+        <div class="sm:w-56 shrink-0">
+          <p class="font-display font-medium text-lg">Read in seconds, not skimmed in minutes</p>
+        </div>
+        <p class="text-ink/60 leading-relaxed">Skills, experience, and fit are pulled from every resume automatically and scored against the role.</p>
+      </div>
+
+      <div class="reveal flex flex-col sm:flex-row gap-6 sm:gap-10 py-8 border-t border-mist">
+        <p class="font-mono text-sm text-ink/35 sm:w-12 shrink-0">04</p>
+        <div class="sm:w-56 shrink-0">
+          <p class="font-display font-medium text-lg">Every candidate hears back</p>
+        </div>
+        <p class="text-ink/60 leading-relaxed">A personalized reply goes out automatically — advance, hold, or a polite no — in your company's voice.</p>
+      </div>
+
+      <div class="reveal flex flex-col sm:flex-row gap-6 sm:gap-10 py-8 border-t border-b border-mist">
+        <p class="font-mono text-sm text-ink/35 sm:w-12 shrink-0">05</p>
+        <div class="sm:w-56 shrink-0">
+          <p class="font-display font-medium text-lg">Meetings fix themselves</p>
+        </div>
+        <p class="text-ink/60 leading-relaxed">Shortlisted candidates get a booking link against your real availability. Confirmed slots sync straight to your calendar.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section id="features" class="px-6 lg:px-10 py-24 lg:py-32 bg-white border-y border-mist">
+  <div class="max-w-6xl mx-auto">
+    <div class="reveal max-w-xl mb-16">
+      <p class="font-mono text-xs uppercase tracking-[0.2em] text-cobalt mb-4">What's running underneath</p>
+      <h2 class="font-display font-semibold text-3xl lg:text-4xl tracking-tight">Four systems, working as one.</h2>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-6">
+
+      <div class="reveal rounded-2xl border border-mist p-8 hover:shadow-md transition-shadow">
+        <div class="w-11 h-11 rounded-xl bg-cobalt/10 text-cobalt flex items-center justify-center mb-6"><i class="fa-brands fa-linkedin-in text-lg"></i></div>
+        <h3 class="font-display font-medium text-xl mb-2">LinkedIn publishing</h3>
+        <p class="text-ink/60 leading-relaxed">Push a role live, schedule it ahead of time, or run several openings at once — all from one place.</p>
+      </div>
+
+      <div class="reveal rounded-2xl border border-mist p-8 hover:shadow-md transition-shadow">
+        <div class="w-11 h-11 rounded-xl bg-amber/10 text-amber flex items-center justify-center mb-6"><i class="fa-solid fa-inbox text-lg"></i></div>
+        <h3 class="font-display font-medium text-xl mb-2">Smart inbox</h3>
+        <p class="text-ink/60 leading-relaxed">Every applicant email is read, sorted, and attached to the right role — nothing sits unopened.</p>
+      </div>
+
+      <div class="reveal rounded-2xl border border-mist p-8 hover:shadow-md transition-shadow md:col-span-2 lg:col-span-1">
+        <div class="w-11 h-11 rounded-xl bg-cobalt/10 text-cobalt flex items-center justify-center mb-6"><i class="fa-solid fa-wand-magic-sparkles text-lg"></i></div>
+        <h3 class="font-display font-medium text-xl mb-2">Resume parsing &amp; scoring</h3>
+        <p class="text-ink/60 leading-relaxed mb-6">Hireflow extracts skills, titles, and years of experience from every resume and ranks candidates against the role.</p>
+        <div class="rounded-xl bg-paper border border-mist p-4 flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium">Senior Backend Engineer</p>
+            <p class="text-xs text-ink/45 mt-0.5">4 yrs · Python, AWS, Postgres</p>
+          </div>
+          <span class="font-mono text-xs text-sage bg-sage/10 px-2.5 py-1 rounded-full">92% match</span>
+        </div>
+      </div>
+
+      <div class="reveal rounded-2xl border border-mist p-8 hover:shadow-md transition-shadow">
+        <div class="w-11 h-11 rounded-xl bg-sage/10 text-sage flex items-center justify-center mb-6"><i class="fa-solid fa-calendar-check text-lg"></i></div>
+        <h3 class="font-display font-medium text-xl mb-2">Meeting scheduler</h3>
+        <p class="text-ink/60 leading-relaxed">Conflict-free interview booking with automatic calendar sync and reminders for both sides.</p>
+      </div>
+
+    </div>
+
+
+    <div class="reveal mt-16 grid grid-cols-2 md:grid-cols-4 gap-8 border-t border-mist pt-12">
+      <div>
+        <p class="font-display font-semibold text-3xl">4.2 hrs</p>
+        <p class="text-sm text-ink/50 mt-1">saved per hire</p>
+      </div>
+      <div>
+        <p class="font-display font-semibold text-3xl">98%</p>
+        <p class="text-sm text-ink/50 mt-1">candidates get a reply</p>
+      </div>
+      <div>
+        <p class="font-display font-semibold text-3xl">&lt;2 min</p>
+        <p class="text-sm text-ink/50 mt-1">average parse time</p>
+      </div>
+      <div>
+        <p class="font-display font-semibold text-3xl">0</p>
+        <p class="text-sm text-ink/50 mt-1">missed interview slots</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section id="always-on" class="px-6 lg:px-10 py-24 lg:py-32 bg-ink text-paper overflow-hidden">
+  <div class="max-w-6xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
+    <div class="reveal">
+      <p class="font-mono text-xs uppercase tracking-[0.2em] text-amber mb-4">Always on</p>
+      <h2 class="font-display font-semibold text-3xl lg:text-4xl tracking-tight">While you sleep, Hireflow doesn't.</h2>
+      <p class="mt-5 text-paper/60 leading-relaxed max-w-md">Applications don't keep office hours, so the pipeline doesn't either. Resumes get parsed, candidates get replies, and interviews get booked around the clock — ready for you by morning.</p>
+    </div>
+
+    <div class="reveal h-72 rounded-2xl border border-white/10 bg-white/[0.03] p-6 marquee-mask overflow-hidden">
+      <div class="marquee-track font-mono text-[12.5px] leading-8 text-paper/55 space-y-1">
+        <p>02:14:02 <span class="text-amber">▸</span> New application — Senior Backend Engineer</p>
+        <p>02:14:05 <span class="text-cobalt">▸</span> Resume parsed — 87% match</p>
+        <p>02:14:07 <span class="text-sage">▸</span> Reply sent — advancing to screening</p>
+        <p>02:15:51 <span class="text-amber">▸</span> New application — Product Designer</p>
+        <p>02:15:54 <span class="text-cobalt">▸</span> Resume parsed — 92% match, portfolio attached</p>
+        <p>02:15:56 <span class="text-sage">▸</span> Reply sent — moving to next round</p>
+        <p>06:40:11 <span class="text-sage">▸</span> Interview confirmed — Thu 10:00 AM</p>
+        <p>07:02:33 <span class="text-amber">▸</span> New application — Backend Engineer</p>
+        <p>07:02:36 <span class="text-cobalt">▸</span> Resume parsed — 64% match</p>
+        <p>07:02:38 <span class="text-paper/40">▸</span> Reply sent — not moving forward</p>
+        <p>02:14:02 <span class="text-amber">▸</span> New application — Senior Backend Engineer</p>
+        <p>02:14:05 <span class="text-cobalt">▸</span> Resume parsed — 87% match</p>
+        <p>02:14:07 <span class="text-sage">▸</span> Reply sent — advancing to screening</p>
+        <p>02:15:51 <span class="text-amber">▸</span> New application — Product Designer</p>
+        <p>02:15:54 <span class="text-cobalt">▸</span> Resume parsed — 92% match, portfolio attached</p>
+        <p>02:15:56 <span class="text-sage">▸</span> Reply sent — moving to next round</p>
+        <p>06:40:11 <span class="text-sage">▸</span> Interview confirmed — Thu 10:00 AM</p>
+        <p>07:02:33 <span class="text-amber">▸</span> New application — Backend Engineer</p>
+        <p>07:02:36 <span class="text-cobalt">▸</span> Resume parsed — 64% match</p>
+        <p>07:02:38 <span class="text-paper/40">▸</span> Reply sent — not moving forward</p>
+      </div>
+    </div>
+  </div>
+</section>
+<section id="cta" class="px-6 lg:px-10 py-24 lg:py-32">
+  <div class="reveal max-w-3xl mx-auto text-center">
+    <h2 class="font-display font-semibold text-3xl lg:text-5xl tracking-tight">Stop running hiring by hand.</h2>
+    <p class="mt-5 text-ink/60 text-lg">Set up your first automated pipeline in under ten minutes.</p>
+    <div class="mt-9 flex flex-wrap items-center justify-center gap-4">
+      <a href="#contact" class="bg-cobalt text-white text-sm font-medium px-7 py-3.5 rounded-full hover:bg-ink transition-colors">Start free trial</a>
+      <a href="#contact" class="text-sm font-medium text-ink/70 hover:text-ink px-7 py-3.5 rounded-full border border-mist transition-colors">Talk to sales</a>
+    </div>
+  </div>
+</section>
+
+
+<footer id="contact" class="px-6 lg:px-10 py-16 border-t border-mist">
+  <div class="max-w-6xl mx-auto">
+    <div class="grid sm:grid-cols-2 lg:grid-cols-5 gap-10">
+      <div class="lg:col-span-2">
+        <a href="#top" class="flex items-center gap-2 font-display text-lg font-bold">
+          <span class="w-2 h-2 rounded-full bg-cobalt"></span> hireflow
+        </a>
+        <p class="text-sm text-ink/50 mt-4 max-w-xs leading-relaxed">The hiring pipeline that runs itself — from the first LinkedIn post to the first interview.</p>
+        <div class="flex items-center gap-4 mt-6 text-ink/40">
+          <a href="#" aria-label="LinkedIn" class="hover:text-ink transition-colors"><i class="fa-brands fa-linkedin-in"></i></a>
+          <a href="#" aria-label="X" class="hover:text-ink transition-colors"><i class="fa-brands fa-x-twitter"></i></a>
+          <a href="mailto:hello@hireflow.example" aria-label="Email" class="hover:text-ink transition-colors"><i class="fa-solid fa-envelope"></i></a>
+        </div>
+      </div>
+
+      <div>
+        <p class="font-medium text-sm mb-4">Product</p>
+        <ul class="space-y-3 text-sm text-ink/55">
+          <li><a href="#how-it-works" class="hover:text-ink">How it works</a></li>
+          <li><a href="#features" class="hover:text-ink">Features</a></li>
+          <li><a href="#" class="hover:text-ink">Pricing</a></li>
+          <li><a href="#" class="hover:text-ink">Integrations</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <p class="font-medium text-sm mb-4">Company</p>
+        <ul class="space-y-3 text-sm text-ink/55">
+          <li><a href="#" class="hover:text-ink">About</a></li>
+          <li><a href="#" class="hover:text-ink">Careers</a></li>
+          <li><a href="#contact" class="hover:text-ink">Contact</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <p class="font-medium text-sm mb-4">Resources</p>
+        <ul class="space-y-3 text-sm text-ink/55">
+          <li><a href="#" class="hover:text-ink">Help center</a></li>
+          <li><a href="#" class="hover:text-ink">API docs</a></li>
+          <li><a href="#" class="hover:text-ink">Status</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mt-14 pt-8 border-t border-mist text-xs text-ink/40">
+      <p>© 2026 Hireflow. All rights reserved.</p>
+      <div class="flex items-center gap-5">
+        <a href="#" class="hover:text-ink">Privacy policy</a>
+        <a href="#" class="hover:text-ink">Terms of service</a>
+        <span class="text-ink/20">|</span>
+        <button type="button" onclick='window.location.href="/admin/welcome"' class="hover:text-ink">Admin</button>
+        <button type="button" onclick='window.location.href="/superAdmin/welcome/singin"' class="hover:text-ink">SuperAdmin</button>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  
+  const siteNav = document.getElementById('siteNav');
+  const onScroll = () => siteNav.classList.toggle('scrolled', window.scrollY > 8);
+  document.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+  const staffMenuBtn = document.getElementById('staffMenuBtn');
+  const staffMenu = document.getElementById('staffMenu');
+  const staffChevron = document.getElementById('staffChevron');
+  staffMenuBtn.addEventListener('click', () => {
+    const isOpen = !staffMenu.classList.contains('hidden');
+    staffMenu.classList.toggle('hidden');
+    staffMenuBtn.setAttribute('aria-expanded', String(!isOpen));
+    staffChevron.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+  });
+  document.addEventListener('click', (e) => {
+    if (!staffMenuBtn.contains(e.target) && !staffMenu.contains(e.target)) {
+      staffMenu.classList.add('hidden');
+      staffMenuBtn.setAttribute('aria-expanded', 'false');
+      staffChevron.style.transform = 'rotate(0deg)';
+    }
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      staffMenu.classList.add('hidden');
+      staffMenuBtn.setAttribute('aria-expanded', 'false');
+    }
+  });
+
+  const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+  const mobileMenu = document.getElementById('mobileMenu');
+  mobileMenuBtn.addEventListener('click', () => {
+    const isOpen = !mobileMenu.classList.contains('hidden');
+    mobileMenu.classList.toggle('hidden');
+    mobileMenuBtn.setAttribute('aria-expanded', String(!isOpen));
+    mobileMenuBtn.innerHTML = isOpen ? '<i class="fa-solid fa-bars text-lg"></i>' : '<i class="fa-solid fa-xmark text-lg"></i>';
+  });
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!reduceMotion) {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15 });
+    document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
+  } else {
+    document.querySelectorAll('.reveal').forEach((el) => el.classList.add('is-visible'));
+  }
+
+  const logLines = [
+    'New application — Senior Backend Engineer',
+    'Resume parsed — 87% match, 4 yrs relevant exp',
+    'Reply sent — advancing to screening',
+    'Interview slot confirmed — Thu 3:00 PM',
+    'New application — Product Designer',
+    'Resume parsed — 92% match, portfolio attached',
+    'Reply sent — moving to next round',
+    'New application — Backend Engineer',
+  ];
+  const logFeed = document.getElementById('logFeed');
+  let logIndex = 0;
+
+  function timestamp() {
+    const d = new Date();
+    return d.toTimeString().slice(0, 8);
+  }
+
+  function pushLog() {
+    const line = document.createElement('div');
+    line.innerHTML = `<span class="text-ink/35">${timestamp()}</span>  ▸  ${logLines[logIndex % logLines.length]}`;
+    logFeed.appendChild(line);
+    while (logFeed.children.length > 4) logFeed.removeChild(logFeed.firstChild);
+    logIndex++;
+  }
+
+  pushLog();
+  if (!reduceMotion) {
+    setInterval(pushLog, 2200);
+  } else {
+    for (let i = 0; i < 3; i++) pushLog();
+  }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= pageTitle %></title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'ui-sans-serif', 'system-ui'],
+            display: ['Space Grotesk', 'ui-sans-serif', 'system-ui'],
+            mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50:  '#eef1ff',
+              100: '#dee4fe',
+              500: '#3b5bfb',
+              600: '#3049e0',
+              700: '#2538b8',
+            },
+          },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    body { font-family: 'Inter', sans-serif; background:#fafaf9; }
+    @media (prefers-reduced-motion: no-preference) {
+      .fade-up { animation: fadeUp .6s ease both; }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: none; }
+    }
+    input:focus-visible, button:focus-visible, a:focus-visible {
+      outline: 2px solid #3b5bfb;
+      outline-offset: 2px;
+    }
+    .otp-box::-webkit-outer-spin-button,
+    .otp-box::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  </style>
+</head>
+<body class="text-[#0a0a0a] antialiased">
+
+  <header class="border-b border-gray-100">
+    <div class="max-w-6xl mx-auto px-6 py-5 flex items-center justify-between">
+      <a href="/Homepage" class="flex items-center gap-2 font-display font-semibold text-[15px]">
+        <span class="w-2 h-2 rounded-full bg-brand-500 inline-block"></span>
+        hireflow
+      </a>
+    </div>
+  </header>
+
+  <main class="max-w-md mx-auto px-6 py-16 sm:py-24">
+    <div class="fade-up text-center mb-8">
+      <p class="font-mono text-xs font-medium uppercase tracking-[0.2em] text-brand-600 mb-4">One-time code</p>
+      <h1 class="font-display font-bold text-4xl leading-[1.1] tracking-tight mb-4">
+        Enter your verification code.
+      </h1>
+      <p class="text-gray-500 text-[15px] leading-relaxed">
+        <% if (typeof method !== 'undefined' && method === 'phone') { %>
+          We sent a 6-digit code to <%= typeof maskedDestination !== 'undefined' ? maskedDestination : 'your phone' %>.
+        <% } else if (typeof method !== 'undefined' && method === 'email') { %>
+          We sent a 6-digit code to <%= typeof maskedDestination !== 'undefined' ? maskedDestination : 'your email' %>.
+        <% } else { %>
+          We sent a 6-digit code to verify your account.
+        <% } %>
+      </p>
+    </div>
+
+    <!-- Optional: pass attemptsLeft from your GET /admin/verify/otp handler to show this -->
+    <% if (typeof attemptsLeft !== 'undefined' && attemptsLeft !== null && attemptsLeft <= 2) { %>
+      <div class="fade-up mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+        <%= attemptsLeft %> attempt<%= attemptsLeft === 1 ? '' : 's' %> left before you'll need to start over.
+      </div>
+    <% } %>
+
+    <!-- Optional: pass error from your GET handler after a failed attempt redirect -->
+    <% if (typeof error !== 'undefined' && error) { %>
+      <div class="fade-up mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+        That code didn't match. Check the digits and try again.
+      </div>
+    <% } %>
+
+    <div class="fade-up bg-white border border-gray-200 rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,0.04),0_12px_32px_-12px_rgba(0,0,0,0.08)] p-7 sm:p-9" style="animation-delay:.1s">
+
+      <form id="otpForm" method="POST" action="/admin/verify/otp" novalidate>
+        <input type="hidden" id="otpValue" name="otp">
+
+        <div class="flex justify-center gap-2 sm:gap-3 mb-2">
+          <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="one-time-code"
+            aria-label="Digit 1 of 6" class="otp-box w-11 h-13 sm:w-12 sm:h-14 text-center text-xl font-mono font-semibold rounded-xl border border-gray-200 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15 transition">
+          <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1"
+            aria-label="Digit 2 of 6" class="otp-box w-11 h-13 sm:w-12 sm:h-14 text-center text-xl font-mono font-semibold rounded-xl border border-gray-200 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15 transition">
+          <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1"
+            aria-label="Digit 3 of 6" class="otp-box w-11 h-13 sm:w-12 sm:h-14 text-center text-xl font-mono font-semibold rounded-xl border border-gray-200 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15 transition">
+          <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1"
+            aria-label="Digit 4 of 6" class="otp-box w-11 h-13 sm:w-12 sm:h-14 text-center text-xl font-mono font-semibold rounded-xl border border-gray-200 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15 transition">
+          <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1"
+            aria-label="Digit 5 of 6" class="otp-box w-11 h-13 sm:w-12 sm:h-14 text-center text-xl font-mono font-semibold rounded-xl border border-gray-200 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15 transition">
+          <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1"
+            aria-label="Digit 6 of 6" class="otp-box w-11 h-13 sm:w-12 sm:h-14 text-center text-xl font-mono font-semibold rounded-xl border border-gray-200 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15 transition">
+        </div>
+
+        <p class="text-center text-xs text-gray-400 mb-6">
+          Code expires in <span id="timer" class="font-mono">5:00</span>
+        </p>
+
+        <p id="expiredMsg" class="hidden text-center text-sm text-red-600 mb-4">
+          This code has expired. <a href="/admin/signup" class="font-semibold underline">Start over</a> to get a new one.
+        </p>
+
+        <p id="otpError" class="hidden text-center text-sm text-red-600 mb-4"></p>
+
+        <button type="submit" id="otpSubmit" disabled
+          class="w-full bg-[#0a0a0a] hover:bg-black disabled:opacity-40 disabled:hover:bg-[#0a0a0a] text-white rounded-full font-semibold text-sm py-3 transition">
+          Verify code
+        </button>
+
+        <a href="/admin/signup" id="startOverLink"
+          class="hidden w-full text-center bg-[#0a0a0a] hover:bg-black text-white rounded-full font-semibold text-sm py-3 transition">
+          Back to signup
+        </a>
+      </form>
+
+      <p class="text-center text-sm text-gray-500 mt-7">
+        Didn't get a code? <a href="/admin/signup" class="font-semibold text-brand-600 hover:text-brand-700">Start over</a>
+      </p>
+    </div>
+  </main>
+
+  <script>
+    const boxes = Array.from(document.querySelectorAll('.otp-box'));
+    const hidden = document.getElementById('otpValue');
+    const submitBtn = document.getElementById('otpSubmit');
+    const startOverLink = document.getElementById('startOverLink');
+    const errorBox = document.getElementById('otpError');
+    const expiredMsg = document.getElementById('expiredMsg');
+    const form = document.getElementById('otpForm');
+
+    function syncValue() {
+      const val = boxes.map(b => b.value).join('');
+      hidden.value = val;
+      submitBtn.disabled = val.length < 6;
+    }
+
+    boxes.forEach((box, i) => {
+      box.addEventListener('input', () => {
+        box.value = box.value.replace(/[^0-9]/g, '').slice(0, 1);
+        if (box.value && i < boxes.length - 1) boxes[i + 1].focus();
+        syncValue();
+      });
+      box.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace' && !box.value && i > 0) boxes[i - 1].focus();
+      });
+      box.addEventListener('paste', (e) => {
+        e.preventDefault();
+        const digits = (e.clipboardData.getData('text') || '').replace(/[^0-9]/g, '').slice(0, 6).split('');
+        digits.forEach((d, idx) => { if (boxes[idx]) boxes[idx].value = d; });
+        (boxes[digits.length] || boxes[boxes.length - 1]).focus();
+        syncValue();
+      });
+    });
+    boxes[0] && boxes[0].focus();
+    syncValue();
+
+    // Cosmetic countdown only — the server's redis TTL is the real source of truth.
+    let seconds = 300;
+    const timerEl = document.getElementById('timer');
+    const countdown = setInterval(() => {
+      seconds--;
+      if (seconds <= 0) {
+        clearInterval(countdown);
+        timerEl.textContent = '0:00';
+        expiredMsg.classList.remove('hidden');
+        submitBtn.disabled = true;
+        return;
+      }
+      timerEl.textContent = Math.floor(seconds / 60) + ':' + String(seconds % 60).padStart(2, '0');
+      if (seconds <= 30) timerEl.classList.add('text-red-600');
+    }, 1000);
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorBox.classList.add('hidden');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Verifying…';
+
+      try {
+        const res = await fetch(form.action, {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({ otp: hidden.value }),
+        });
+
+        // Success or retry — the controller redirects either way, so just follow it.
+        if (res.redirected) {
+          window.location.href = res.url;
+          return;
+        }
+
+        // Out of attempts — the controller returns raw JSON with a 403 here.
+        if (res.status === 403) {
+          errorBox.textContent = 'Too many incorrect attempts. Please create your account again.';
+          errorBox.classList.remove('hidden');
+          boxes.forEach(b => b.disabled = true);
+          submitBtn.classList.add('hidden');
+          startOverLink.classList.remove('hidden');
+          return;
+        }
+
+        errorBox.textContent = 'Something went wrong. Please try again.';
+        errorBox.classList.remove('hidden');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Verify code';
+      } catch (err) {
+        errorBox.textContent = 'Network error — check your connection and try again.';
+        errorBox.classList.remove('hidden');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Verify code';
+      }
+    });
+  </script>
+
+</body>
+</html>
