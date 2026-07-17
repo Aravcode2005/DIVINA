@@ -1,7 +1,7 @@
 services:
   app:
     build: .
-    container_name: hireflowv4
+    container_name: airexHireflowv4
     ports:
       - "80:8080"
       - "6080:6080"
@@ -16,7 +16,7 @@ services:
     restart: unless-stopped
   redis:
     image: redis
-    container_name: hireflow-agent-redis4
+    container_name: airexHireflow-agent-redis4
     command: ["redis-server", "--appendonly", "yes"]
     volumes:
       - redis-data:/data
