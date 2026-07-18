@@ -1,1 +1,63 @@
+1. You modify application code.
 
+2. You commit the change.
+
+3. You push the commit to GitHub.
+
+4. GitHub sends a webhook to Jenkins.
+
+5. Jenkins controller receives the event.
+
+6. Jenkins schedules the pipeline on an agent.
+
+7. Agent creates or cleans a workspace.
+
+8. Agent checks out the exact Git commit.
+
+9. Jenkins reads the Jenkinsfile from that commit.
+
+10. Jenkins installs dependencies.
+
+11. Jenkins runs tests and linting.
+
+12. Jenkins invokes the Docker client.
+
+13. Docker sends the build context to BuildKit/daemon.
+
+14. Docker reads the Dockerfile.
+
+15. Docker pulls missing base-image layers.
+
+16. Docker executes build instructions.
+
+17. Docker creates an immutable image.
+
+18. Jenkins optionally starts and health-tests that image.
+
+19. Jenkins authenticates with ECR.
+
+20. Jenkins tags the image using the commit SHA.
+
+21. Docker uploads missing layers and the image manifest to ECR.
+
+22. Jenkins triggers deployment.
+
+23A. Direct EC2:
+     Jenkins connects to EC2.
+     EC2 pulls the new image.
+     Old container is stopped.
+     New container starts.
+
+23B. Elastic Beanstalk:
+     Jenkins uploads a deployment version.
+     EB updates the environment.
+     EB-managed EC2 instances pull the new image.
+     EB starts the container and checks its health.
+
+24. Nginx or a load balancer directs traffic to the container.
+
+25. The application begins receiving production requests.
+
+26. Monitoring detects whether the deployment is healthy.
+
+27. If unhealthy, the deployment fails or you roll back to the previous image.

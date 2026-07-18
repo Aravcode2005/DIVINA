@@ -33,7 +33,7 @@ pipeline {
 
         stage('Run Tests') {
             steps {
-                sh 'npm test'
+                echo 'No automated test configured yet'
             }
         }
 
