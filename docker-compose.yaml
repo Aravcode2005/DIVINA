@@ -1,25 +1,43 @@
 services:
   app:
-    build: .
-    container_name: airexHireflowv4
+    image: airehire:latest
+
+    build:
+      context: .
+      dockerfile: Dockerfile.genz
+
+    container_name: airehire-app
+
     ports:
       - "80:8080"
       - "6080:6080"
-    env_file: 
-      -  .env
+
+    env_file:
+      - .env
+
     environment:
       NODE_ENV: production
       PORT: 8080
       REDIS_URL: redis://redis:6379
+
     depends_on:
       - redis
+
     restart: unless-stopped
+
   redis:
-    image: redis
-    container_name: airexHireflow-agent-redis4
-    command: ["redis-server", "--appendonly", "yes"]
+    image: redis:latest
+    container_name: airehire-redis
+
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+
     volumes:
       - redis-data:/data
+
     restart: unless-stopped
+
 volumes:
   redis-data:
