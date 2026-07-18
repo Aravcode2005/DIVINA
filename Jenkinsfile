@@ -5,6 +5,9 @@ pipeline {
         APP_NAME = 'airhire'
         DOCKERFILE = 'Dockerfile.genz'
         IMAGE_TAG = "${BUILD_NUMBER}"
+        DOCKER_HOST='tcp://elated_robinson:2375'
+        DOCKER_TLS_VERIFY=''
+        DOCKER_CERT_PATH= ''
     }
 
     stages {
@@ -21,6 +24,7 @@ pipeline {
                     node --version
                     npm --version
                     docker --version
+                    docker info
                 '''
             }
         }
