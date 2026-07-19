@@ -2,7 +2,7 @@ pipeline {
     agent any
     environment {
         APP_NAME = 'airhire'
-        DOCKERFILE = 'Dockerfile.genz'
+        DOCKERFILE = 'Dockerfile'
         IMAGE_TAG = "${BUILD_NUMBER}"
         DOCKER_HOST='tcp://elated_robinson:2375'
         DOCKER_TLS_VERIFY=''
