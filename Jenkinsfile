@@ -47,11 +47,28 @@ pipeline {
                     docker build \
                         -f "${DOCKERFILE}" \
                         -t "${APP_NAME}:${IMAGE_TAG}" \
-                        -t "${APP_NAME}:latest" \
+                        -t "${APP_NAME}:${GIT_COMMIT}" \
                         .
                 '''
             }
         }
+
+       stage('Push to ECR') {
+    steps {
+        withCredentials([[
+            $class: 'AmazonWebServicesCredentialsBinding',
+            credentialsId: 'aws-ecr-creds'
+        ]]) {
+            sh '''
+                aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 209197638193.dkr.ecr.ap-south-1.amazonaws.com
+
+                docker tag "${APP_NAME}:${IMAGE_TAG}" 209197638193.dkr.ecr.ap-south-1.amazonaws.com/airehirex:${IMAGE_TAG}
+
+                docker push 209197638193.dkr.ecr.ap-south-1.amazonaws.com/airehirex:${IMAGE_TAG}
+            '''
+        }
+    }
+}
 
         stage('Inspect Image') {
             steps {
