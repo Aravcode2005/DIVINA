@@ -56,7 +56,7 @@ pipeline {
        stage('Install AWS CLI'){
          steps{
          sh ''' 
-            if!command -v aws &>/dev/null; then
+            if!command -v aws &>/dev/null 2>&1; then
               apt-get update && apt-get install -y awscli
             fi
 
