@@ -52,18 +52,24 @@ pipeline {
                 '''
             }
         }    
-       stage('Push to ECR') {
+stage('Push to ECR') {
     steps {
         withCredentials([[
             $class: 'AmazonWebServicesCredentialsBinding',
             credentialsId: 'aws-ecr-credentials'
         ]]) {
             sh '''
-                echo "Testing credentials presence:"
-                docker run --rm -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY amazon/aws-cli sts get-caller-identity
+                echo "=== Sanity check: CLI version ==="
+                docker run --rm amazon/aws-cli --version 2>&1
+                echo "exit code: $?"
 
-                echo "Attempting login password fetch:"
-                docker run --rm -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY amazon/aws-cli ecr get-login-password --region ap-south-1
+                echo "=== Checking credentials ==="
+                docker run --rm -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY amazon/aws-cli sts get-caller-identity 2>&1
+                echo "exit code: $?"
+
+                echo "=== Fetching ECR login password ==="
+                docker run --rm -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY amazon/aws-cli ecr get-login-password --region ap-south-1 2>&1
+                echo "exit code: $?"
             '''
         }
     }
