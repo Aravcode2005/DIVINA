@@ -1,6 +1,5 @@
 pipeline {
     agent any
-
     environment {
         APP_NAME = 'airhire'
         DOCKERFILE = 'Dockerfile.genz'
@@ -9,7 +8,6 @@ pipeline {
         DOCKER_TLS_VERIFY=''
         DOCKER_CERT_PATH= ''
     }
-
     stages {
         stage('Checkout') {
             steps {
@@ -17,7 +15,6 @@ pipeline {
                 checkout scm
             }
         }
-
         stage('Verify Environment') {
             steps {
                 sh '''
@@ -28,19 +25,16 @@ pipeline {
                 '''
             }
         }
-
         stage('Install Dependencies') {
             steps {
                 sh 'npm ci'
             }
         }
-
         stage('Run Tests') {
             steps {
                 echo 'No automated test configured yet'
             }
         }
-
         stage('Build Docker Image') {
             steps {
                 sh '''
@@ -51,46 +45,48 @@ pipeline {
                         .
                 '''
             }
-        }    
-stage('Push to ECR') {
-    steps {
-        withCredentials([[
-            $class: 'AmazonWebServicesCredentialsBinding',
-            credentialsId: 'aws-ecr-credentials'
-        ]]) {
-            sh '''
-                echo "=== Sanity check: CLI version ==="
-                docker run --rm amazon/aws-cli --version 2>&1
-                echo "exit code: $?"
-
-                echo "=== Checking credentials ==="
-                docker run --rm -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY amazon/aws-cli sts get-caller-identity 2>&1
-                echo "exit code: $?"
-
-                echo "=== Fetching ECR login password ==="
-                docker run --rm -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY amazon/aws-cli ecr get-login-password --region ap-south-1 2>&1
-                echo "exit code: $?"
-            '''
         }
-    }
-}
- 
+        stage('Install AWS CLI') {
+            steps {
+                sh '''
+                    if ! command -v aws >/dev/null 2>&1; then
+                        curl -sSL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o /tmp/awscliv2.zip
+                        cd /tmp && unzip -q -o awscliv2.zip
+                        ./aws/install --install-dir /tmp/aws-cli --bin-dir /tmp/aws-cli-bin --update
+                    fi
+                    /tmp/aws-cli-bin/aws --version
+                '''
+            }
+        }
+        stage('Push to ECR') {
+            steps {
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: 'aws-ecr-credentials'
+                ]]) {
+                    sh '''
+                        PASSWORD=$(/tmp/aws-cli-bin/aws ecr get-login-password --region ap-south-1)
+                        echo "$PASSWORD" | docker login --username AWS --password-stdin 209197638193.dkr.ecr.ap-south-1.amazonaws.com
+
+                        docker tag "${APP_NAME}:${IMAGE_TAG}" 209197638193.dkr.ecr.ap-south-1.amazonaws.com/airehirex:${IMAGE_TAG}
+                        docker push 209197638193.dkr.ecr.ap-south-1.amazonaws.com/airehirex:${IMAGE_TAG}
+                    '''
+                }
+            }
+        }
         stage('Inspect Image') {
             steps {
                 sh 'docker image inspect "${APP_NAME}:${IMAGE_TAG}"'
             }
         }
     }
-
     post {
         success {
             echo "Pipeline succeeded. Built ${APP_NAME}:${IMAGE_TAG}"
         }
-
         failure {
             echo 'Pipeline failed. Check the failed stage logs.'
         }
-
         always {
             echo "Build ${BUILD_NUMBER} has completed."
         }
