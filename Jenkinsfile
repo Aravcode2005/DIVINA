@@ -51,16 +51,7 @@ pipeline {
                         .
                 '''
             }
-        }
-stage('Install AWS CLI') {
-    steps {
-        sh '''
-            if ! command -v aws >/dev/null 2>&1; then
-                apt-get update && apt-get install -y awscli
-            fi
-        '''
-    }
-}
+        }    
        stage('Push to ECR') {
     steps {
         withCredentials([[
@@ -68,16 +59,16 @@ stage('Install AWS CLI') {
             credentialsId: 'aws-ecr-credentials'
         ]]) {
             sh '''
-                aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 209197638193.dkr.ecr.ap-south-1.amazonaws.com
+                PASSWORD=$(docker run --rm -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY amazon/aws-cli ecr get-login-password --region ap-south-1)
+                echo "$PASSWORD" | docker login --username AWS --password-stdin 209197638193.dkr.ecr.ap-south-1.amazonaws.com
 
                 docker tag "${APP_NAME}:${IMAGE_TAG}" 209197638193.dkr.ecr.ap-south-1.amazonaws.com/airehirex:${IMAGE_TAG}
-
                 docker push 209197638193.dkr.ecr.ap-south-1.amazonaws.com/airehirex:${IMAGE_TAG}
             '''
         }
     }
-}
-
+}   
+ 
         stage('Inspect Image') {
             steps {
                 sh 'docker image inspect "${APP_NAME}:${IMAGE_TAG}"'
