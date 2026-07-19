@@ -59,15 +59,15 @@ pipeline {
             credentialsId: 'aws-ecr-credentials'
         ]]) {
             sh '''
-                PASSWORD=$(docker run --rm -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY amazon/aws-cli ecr get-login-password --region ap-south-1)
-                echo "$PASSWORD" | docker login --username AWS --password-stdin 209197638193.dkr.ecr.ap-south-1.amazonaws.com
+                echo "Testing credentials presence:"
+                docker run --rm -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY amazon/aws-cli sts get-caller-identity
 
-                docker tag "${APP_NAME}:${IMAGE_TAG}" 209197638193.dkr.ecr.ap-south-1.amazonaws.com/airehirex:${IMAGE_TAG}
-                docker push 209197638193.dkr.ecr.ap-south-1.amazonaws.com/airehirex:${IMAGE_TAG}
+                echo "Attempting login password fetch:"
+                docker run --rm -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY amazon/aws-cli ecr get-login-password --region ap-south-1
             '''
         }
     }
-}   
+}
  
         stage('Inspect Image') {
             steps {
