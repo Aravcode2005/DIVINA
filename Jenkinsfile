@@ -53,6 +53,19 @@ pipeline {
             }
         }
 
+       stage('Install AWS CLI'){
+         steps{
+         sh ''' 
+            if!command -v aws &>/dev/null; then
+              apt-get update && apt-get install -y awscli
+            fi
+
+           '''
+           
+           }
+
+        }
+
        stage('Push to ECR') {
     steps {
         withCredentials([[
